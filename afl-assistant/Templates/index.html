@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>AFL Gridley Helper</title>
+</head>
+<body>
+
+<h1>AFL Gridley Helper</h1>
+
+<form method="POST">
+
+    <label>Team 1:</label>
+    <select name="team1">
+        <option value="">-- select --</option>
+        {% for t in teams %}
+            <option value="{{ t }}" {% if t == team1 %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+    </select>
+
+    <label>Team 2 (optional):</label>
+    <select name="team2">
+        <option value="">-- none --</option>
+        {% for t in teams %}
+            <option value="{{ t }}" {% if t == team2 %}selected{% endif %}>{{ t }}</option>
+        {% endfor %}
+    </select>
+
+    <label>Min career games:</label>
+    <input type="number" name="min_games" value="{{ min_games }}">
+
+    <button type="submit">Find Players</button>
+</form>
+
+{% if players %}
+    <h2>Results</h2>
+    <p><em>Sorted for Gridley (lower games = rarer answers)</em></p>
+
+    <table border="1" cellpadding="5">
+        <tr>
+            <th>Name</th>
+            <th>Career Games</th>
+            <th>Career Goals</th>
+            <th>Teams Played For</th>
+        </tr>
+        {% for p in players %}
+        <tr>
+            <td>{{ p["name"] }}</td>
+            <td>{{ p["career_games"] }}</td>
+            <td>{{ p["career_goals"] }}</td>
+            <td>{{ p["teams"] }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+{% endif %}
+
+</body>
+</html>
