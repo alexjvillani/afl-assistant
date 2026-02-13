@@ -95,6 +95,7 @@ Min Votes:
 	<th>Max K</th>
     <th>Brownlow Winner</th>
     <th>Brownlow Votes</th>
+	<th>Career</th>
 </tr>
 
 {% for p in players %}
@@ -112,6 +113,7 @@ Min Votes:
 	<td>{{ p['max_kicks_game'] }}</td>
     <td>{{ "Yes" if p['brownlow_winner'] == 1 else "No" }}</td>
     <td>{{ p['brownlow_votes'] }}</td>
+	<td>{{ p['first_year'] }} - {{ p['last_year'] }}</td>
 </tr>
 {% endfor %}
 </table>

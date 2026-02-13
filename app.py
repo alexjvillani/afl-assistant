@@ -71,7 +71,9 @@ def query_players(filters):
         "max_goals_game",
         "max_disposals_game",
         "brownlow_votes",
-        "brownlow_wins"
+        "brownlow_wins",
+        "first_year",
+        "last_year"
     ]
 
     if sort_column not in allowed_columns:
