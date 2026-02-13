@@ -1,58 +1,120 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <title>AFL Gridley Helper</title>
+    <title>Gridley AFL Assistant</title>
+    <style>
+        body { font-family: Arial; background:#f4f4f4; padding:20px; }
+        table { border-collapse: collapse; width:100%; background:white; }
+        th, td { border:1px solid #ddd; padding:6px; text-align:center; }
+        th { background:#222; color:white; }
+        tr:nth-child(even) { background:#f2f2f2; }
+        .box { background:white; padding:15px; margin-bottom:20px; }
+    </style>
 </head>
 <body>
 
-<h1>AFL Gridley Helper</h1>
+<h1>🏉 Gridley AFL Assistant</h1>
 
-<form method="POST">
+<div class="box">
+<form method="get">
 
-    <label>Team 1:</label>
-    <select name="team1">
-        <option value="">-- select --</option>
-        {% for t in teams %}
-            <option value="{{ t }}" {% if t == team1 %}selected{% endif %}>{{ t }}</option>
-        {% endfor %}
-    </select>
+<strong>Teams</strong><br>
 
-    <label>Team 2 (optional):</label>
-    <select name="team2">
-        <option value="">-- none --</option>
-        {% for t in teams %}
-            <option value="{{ t }}" {% if t == team2 %}selected{% endif %}>{{ t }}</option>
-        {% endfor %}
-    </select>
+Team 1:
+<select name="team1">
+    <option value="">Any</option>
+    {% for t in teams %}
+        <option value="{{ t }}" {% if filters.team1 == t %}selected{% endif %}>{{ t }}</option>
+    {% endfor %}
+</select>
 
-    <label>Min career games:</label>
-    <input type="number" name="min_games" value="{{ min_games }}">
+Team 2:
+<select name="team2">
+    <option value="">Any</option>
+    {% for t in teams %}
+        <option value="{{ t }}" {% if filters.team2 == t %}selected{% endif %}>{{ t }}</option>
+    {% endfor %}
+</select>
 
-    <button type="submit">Find Players</button>
+<br><br>
+
+<strong>Career</strong><br>
+
+Min Games: <input type="number" name="min_games" value="{{ filters.min_games or '' }}">
+Max Games: <input type="number" name="max_games" value="{{ filters.max_games or '' }}">
+
+<br>
+
+Min Goals: <input type="number" name="min_goals" value="{{ filters.min_goals or '' }}">
+Max Goals: <input type="number" name="max_goals" value="{{ filters.max_goals or '' }}">
+
+<br><br>
+
+<strong>Brownlow</strong><br>
+
+Winner:
+<input type="checkbox" name="brownlow_winner" value="1"
+{% if filters.brownlow_winner %}checked{% endif %}>
+
+Min Votes:
+<input type="number" name="min_votes" value="{{ filters.min_votes or '' }}">
+
+<br><br>
+
+<strong>Sort</strong><br>
+
+<select name="sort_by">
+    <option value="career_games">Career Games</option>
+    <option value="career_goals">Career Goals</option>
+    <option value="max_goals_game">Max Goals (Game)</option>
+    <option value="max_disposals_game">Max Disposals</option>
+	<option value="max_kicks_game">Max Kicks</option>
+    <option value="brownlow_votes">Brownlow Votes</option>
+</select>
+
+<select name="sort_order">
+    <option value="ASC">Ascending</option>
+    <option value="DESC">Descending</option>
+</select>
+
+<br><br>
+
+<button type="submit">Search</button>
+
 </form>
+</div>
 
-{% if players %}
-    <h2>Results</h2>
-    <p><em>Sorted for Gridley (lower games = rarer answers)</em></p>
+<table>
+<tr>
+    <th>Name</th>
+    <th>Teams</th>
+    <th>Games</th>
+    <th>Goals</th>
+    <th>Max G</th>
+    <th>Max D</th>
+	<th>Max K</th>
+    <th>Brownlow Winner</th>
+    <th>Brownlow Votes</th>
+</tr>
 
-    <table border="1" cellpadding="5">
-        <tr>
-            <th>Name</th>
-            <th>Career Games</th>
-            <th>Career Goals</th>
-            <th>Teams Played For</th>
-        </tr>
-        {% for p in players %}
-        <tr>
-            <td>{{ p["name"] }}</td>
-            <td>{{ p["career_games"] }}</td>
-            <td>{{ p["career_goals"] }}</td>
-            <td>{{ p["teams"] }}</td>
-        </tr>
-        {% endfor %}
-    </table>
-{% endif %}
+{% for p in players %}
+<tr>
+    <td>
+        <a href="{{ p['player_id'] }}" target="_blank">
+            {{ p['name'] }}
+        </a>
+    </td>
+    <td>{{ p['teams'] }}</td>
+    <td>{{ p['career_games'] }}</td>
+    <td>{{ p['career_goals'] }}</td>
+    <td>{{ p['max_goals_game'] }}</td>
+    <td>{{ p['max_disposals_game'] }}</td>
+	<td>{{ p['max_kicks_game'] }}</td>
+    <td>{{ "Yes" if p['brownlow_winner'] == 1 else "No" }}</td>
+    <td>{{ p['brownlow_votes'] }}</td>
+</tr>
+{% endfor %}
+</table>
 
 </body>
 </html>
