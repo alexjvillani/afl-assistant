@@ -12,7 +12,7 @@ TEAM_OPTIONS = [
     "essendon", "fitzroy", "fremantle", "geelong", "goldcoast",
     "gws", "hawthorn", "melbourne", "kangaroos",
     "padelaide", "richmond", "stkilda", "swans", "university",
-    "westcoast", "bulldogs"
+    "westcoast", "bullldogs"
 ]
 
 
