@@ -9,6 +9,8 @@
         th { background:#222; color:white; }
         tr:nth-child(even) { background:#f2f2f2; }
         .box { background:white; padding:15px; margin-bottom:20px; }
+        label { margin-right:15px; }
+        input[type="number"] { width:80px; }
     </style>
 </head>
 <body>
@@ -17,6 +19,10 @@
 
 <div class="box">
 <form method="get">
+
+<!-- ============================= -->
+<!-- TEAM FILTERS -->
+<!-- ============================= -->
 
 <strong>Teams</strong><br>
 
@@ -38,6 +44,10 @@ Team 2:
 
 <br><br>
 
+<!-- ============================= -->
+<!-- CAREER FILTERS -->
+<!-- ============================= -->
+
 <strong>Career</strong><br>
 
 Min Games:
@@ -56,6 +66,10 @@ Max Goals:
 
 <br><br>
 
+<!-- ============================= -->
+<!-- BROWNLOW FILTERS -->
+<!-- ============================= -->
+
 <strong>Brownlow</strong><br>
 
 Min Wins:
@@ -66,22 +80,64 @@ Min Votes:
 
 <br><br>
 
+<!-- ============================= -->
+<!-- SORTING -->
+<!-- ============================= -->
+
 <strong>Sort</strong><br>
 
 <select name="sort_by">
-    <option value="career_games">Career Games</option>
-    <option value="career_goals">Career Goals</option>
-    <option value="max_goals_game">Max Goals (Game)</option>
-    <option value="max_disposals_game">Max Disposals</option>
-    <option value="max_kicks_game">Max Kicks</option>
-    <option value="brownlow_votes">Brownlow Votes</option>
-    <option value="brownlow_wins">Brownlow Wins</option>
+    <option value="career_games" {% if filters.sort_by == "career_games" %}selected{% endif %}>Career Games</option>
+    <option value="career_goals" {% if filters.sort_by == "career_goals" %}selected{% endif %}>Career Goals</option>
+    <option value="max_goals_game" {% if filters.sort_by == "max_goals_game" %}selected{% endif %}>Max Goals (Game)</option>
+    <option value="max_disposals_game" {% if filters.sort_by == "max_disposals_game" %}selected{% endif %}>Max Disposals</option>
+    <option value="max_kicks_game" {% if filters.sort_by == "max_kicks_game" %}selected{% endif %}>Max Kicks</option>
+    <option value="brownlow_votes" {% if filters.sort_by == "brownlow_votes" %}selected{% endif %}>Brownlow Votes</option>
+    <option value="brownlow_wins" {% if filters.sort_by == "brownlow_wins" %}selected{% endif %}>Brownlow Wins</option>
 </select>
 
 <select name="sort_order">
-    <option value="DESC">Descending</option>
-    <option value="ASC">Ascending</option>
+    <option value="DESC" {% if filters.sort_order == "DESC" %}selected{% endif %}>Descending</option>
+    <option value="ASC" {% if filters.sort_order == "ASC" %}selected{% endif %}>Ascending</option>
 </select>
+
+<br><br>
+
+<!-- ============================= -->
+<!-- DISPLAY COLUMN OPTIONS -->
+<!-- ============================= -->
+
+<strong>Display Columns</strong><br>
+
+<label>
+    <input type="checkbox" name="show_max_goals"
+    {% if visible.max_goals %}checked{% endif %}>
+    Max Goals
+</label>
+
+<label>
+    <input type="checkbox" name="show_max_disposals"
+    {% if visible.max_disposals %}checked{% endif %}>
+    Max Disposals
+</label>
+
+<label>
+    <input type="checkbox" name="show_max_kicks"
+    {% if visible.max_kicks %}checked{% endif %}>
+    Max Kicks
+</label>
+
+<label>
+    <input type="checkbox" name="show_wins"
+    {% if visible.brownlow_wins %}checked{% endif %}>
+    Brownlow Wins
+</label>
+
+<label>
+    <input type="checkbox" name="show_votes"
+    {% if visible.brownlow_votes %}checked{% endif %}>
+    Brownlow Votes
+</label>
 
 <br><br>
 
@@ -90,17 +146,37 @@ Min Votes:
 </form>
 </div>
 
+<!-- ============================= -->
+<!-- RESULTS TABLE -->
+<!-- ============================= -->
+
 <table>
 <tr>
     <th>Name</th>
     <th>Teams</th>
     <th>Games</th>
     <th>Goals</th>
-    <th>Max G</th>
-    <th>Max D</th>
-    <th>Max K</th>
-    <th>Brownlow Wins</th>
-    <th>Brownlow Votes</th>
+
+    {% if visible.max_goals %}
+        <th>Max G</th>
+    {% endif %}
+
+    {% if visible.max_disposals %}
+        <th>Max D</th>
+    {% endif %}
+
+    {% if visible.max_kicks %}
+        <th>Max K</th>
+    {% endif %}
+
+    {% if visible.brownlow_wins %}
+        <th>Brownlow Wins</th>
+    {% endif %}
+
+    {% if visible.brownlow_votes %}
+        <th>Brownlow Votes</th>
+    {% endif %}
+
     <th>Career</th>
 </tr>
 
@@ -114,14 +190,31 @@ Min Votes:
     <td>{{ p['teams'] }}</td>
     <td>{{ p['career_games'] }}</td>
     <td>{{ p['career_goals'] }}</td>
-    <td>{{ p['max_goals_game'] }}</td>
-    <td>{{ p['max_disposals_game'] }}</td>
-    <td>{{ p['max_kicks_game'] }}</td>
-    <td>{{ p['brownlow_wins'] }}</td>
-    <td>{{ p['brownlow_votes'] }}</td>
+
+    {% if visible.max_goals %}
+        <td>{{ p['max_goals_game'] }}</td>
+    {% endif %}
+
+    {% if visible.max_disposals %}
+        <td>{{ p['max_disposals_game'] }}</td>
+    {% endif %}
+
+    {% if visible.max_kicks %}
+        <td>{{ p['max_kicks_game'] }}</td>
+    {% endif %}
+
+    {% if visible.brownlow_wins %}
+        <td>{{ p['brownlow_wins'] }}</td>
+    {% endif %}
+
+    {% if visible.brownlow_votes %}
+        <td>{{ p['brownlow_votes'] }}</td>
+    {% endif %}
+
     <td>{{ p['first_year'] }} - {{ p['last_year'] }}</td>
 </tr>
 {% endfor %}
+
 </table>
 
 </body>
