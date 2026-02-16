@@ -4,21 +4,10 @@ conn = sqlite3.connect("players.db")
 c = conn.cursor()
 
 try:
-    c.execute("ALTER TABLE players ADD COLUMN gf_wins INTEGER DEFAULT 0")
+    c.execute("ALTER TABLE players ADD COLUMN height INTEGER")
+    print("Height column added.")
 except:
-    pass
-
-try:
-    c.execute("ALTER TABLE players ADD COLUMN gf_losses INTEGER DEFAULT 0")
-except:
-    pass
-
-try:
-    c.execute("ALTER TABLE players ADD COLUMN gf_draws INTEGER DEFAULT 0")
-except:
-    pass
+    print("Height column already exists.")
 
 conn.commit()
 conn.close()
-
-print("GF columns ensured.")

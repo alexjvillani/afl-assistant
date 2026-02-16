@@ -56,6 +56,27 @@ Max Goals:
 
 <br><br>
 
+<strong>Height (cm)</strong><br>
+
+Min Height:
+<input type="number" name="min_height" value="{{ filters.min_height or '' }}">
+
+Max Height:
+<input type="number" name="max_height" value="{{ filters.max_height or '' }}">
+
+<br><br>
+
+<strong>Career Years</strong><br>
+
+Debuted After:
+<input type="number" name="min_first_year" value="{{ filters.min_first_year or '' }}">
+
+Played After:
+<input type="number" name="min_last_year" value="{{ filters.min_last_year or '' }}">
+
+<br><br>
+
+
 <strong>Brownlow</strong><br>
 
 Min Wins:
@@ -74,7 +95,9 @@ Min Votes:
     <option value="brownlow_votes">Brownlow Votes</option>
     <option value="brownlow_wins">Brownlow Wins</option>
     <option value="gf_wins">GF Wins</option>
-    <option value="gf_wins">GF Wins</option>
+	<option value="first_year">First Year</option>
+	<option value="last_year">Last Year</option>
+
 </select>
 
 <select name="sort_order">
@@ -92,6 +115,8 @@ Min Votes:
 <label><input type="checkbox" name="show_wins" {% if visible.brownlow_wins %}checked{% endif %}> Brownlow Wins</label>
 <label><input type="checkbox" name="show_votes" {% if visible.brownlow_votes %}checked{% endif %}> Brownlow Votes</label>
 <label><input type="checkbox" name="show_gf_record" {% if visible.gf_record %}checked{% endif %}> GF Record (W-D-L)</label>
+<label><input type="checkbox" name="show_height" {% if visible.height %}checked{% endif %}> Height</label>
+<label><input type="checkbox" name="show_years" {% if visible.years %}checked{% endif %}>Years Played</label>
 
 <br><br>
 
@@ -113,6 +138,9 @@ Min Votes:
     {% if visible.brownlow_wins %}<th>Brownlow Wins</th>{% endif %}
     {% if visible.brownlow_votes %}<th>Brownlow Votes</th>{% endif %}
     {% if visible.gf_record %}<th>GF Record</th>{% endif %}
+	{% if visible.height %}<th>Height (cm)</th>{% endif %}
+	{% if visible.years %}<th>Years</th>{% endif %}
+
 
     <th>Career</th>
 </tr>
@@ -130,6 +158,10 @@ Min Votes:
     {% if visible.brownlow_wins %}<td>{{ p['brownlow_wins'] }}</td>{% endif %}
     {% if visible.brownlow_votes %}<td>{{ p['brownlow_votes'] }}</td>{% endif %}
     {% if visible.gf_record %}<td>{{ p['gf_wins'] or 0 }}-{{ p['gf_draws'] or 0 }}-{{ p['gf_losses'] or 0 }}</td>{% endif %}
+	{% if visible.height %}<td>{{ p['height'] or '' }}</td>{% endif %}
+	{% if visible.years %}<td>{{ p['first_year'] }} - {{ p['last_year'] }}</td>{% endif %}
+
+
 
     <td>{{ p['first_year'] }} - {{ p['last_year'] }}</td>
 </tr>

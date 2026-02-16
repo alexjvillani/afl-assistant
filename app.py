@@ -56,7 +56,30 @@ def query_players(filters):
     if filters["max_goals"]:
         query += " AND career_goals <= ?"
         params.append(filters["max_goals"])
+        
+    # ----------------------------
+    # HEIGHT FILTERS
+    # ----------------------------
 
+    if filters["min_height"]:
+        query += " AND height >= ?"
+        params.append(filters["min_height"])
+
+    if filters["max_height"]:
+        query += " AND height <= ?"
+        params.append(filters["max_height"])
+        
+    # ----------------------------
+    # CAREER YEAR FILTERS
+    # ----------------------------
+
+    if filters["min_first_year"]:
+        query += " AND first_year >= ?"
+        params.append(filters["min_first_year"])
+
+    if filters["min_last_year"]:
+        query += " AND last_year >= ?"
+        params.append(filters["min_last_year"])
     # ----------------------------
     # BROWNLOW FILTERS
     # ----------------------------
@@ -96,7 +119,10 @@ def query_players(filters):
         "max_kicks_game",
         "brownlow_votes",
         "brownlow_wins",
-        "gf_wins"
+        "gf_wins",
+        "height",
+        "first_year",
+        "last_year"
     ]
 
     if sort_column not in allowed_columns:
@@ -124,8 +150,12 @@ def index():
         "max_games": request.args.get("max_games"),
         "min_goals": request.args.get("min_goals"),
         "max_goals": request.args.get("max_goals"),
+        "min_height": request.args.get("min_height"),
+        "max_height": request.args.get("max_height"),
         "min_votes": request.args.get("min_votes"),
         "min_wins": request.args.get("min_wins"),
+        "min_first_year": request.args.get("min_first_year"),
+        "min_last_year": request.args.get("min_last_year"),
         "sort_by": request.args.get("sort_by"),
         "sort_order": request.args.get("sort_order")
     }
@@ -140,7 +170,9 @@ def index():
         "max_kicks": request.args.get("show_max_kicks"),
         "brownlow_votes": request.args.get("show_votes"),
         "brownlow_wins": request.args.get("show_wins"),
-        "gf_record": request.args.get("show_gf_record")
+        "gf_record": request.args.get("show_gf_record"),
+        "height": request.args.get("show_height"),
+        "years": request.args.get("show_years"),
     }
 
     players = query_players(filters)
