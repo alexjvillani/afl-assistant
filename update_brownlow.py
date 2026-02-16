@@ -37,21 +37,16 @@ for page in range(0, 9):
         if not link:
             continue
 
-        # -------------------------------
-        # Convert "Gary Ablett"
-        # to "Ablett, Gary"
-        # -------------------------------
+        # ------------------------------------------------
+        # Build FULL correct player URL
+        # ------------------------------------------------
 
-        raw_name = link.get_text(strip=True)
+        href = link["href"]
 
-        parts = raw_name.split(" ")
-        if len(parts) < 2:
-            continue
+        # Brownlow page uses ../stats/players/...
+        href = href.replace("..", "")
 
-        first = " ".join(parts[:-1])
-        last = parts[-1]
-
-        db_name = "%s, %s" % (last, first)
+        full_url = BASE + "/afl" + href
 
         try:
             votes = int(cols[3].get_text(strip=True))
@@ -61,14 +56,14 @@ for page in range(0, 9):
         wins_text = cols[-1].get_text(strip=True)
         wins = int(wins_text) if wins_text.isdigit() else 0
 
-        print "Updating:", db_name, "Votes:", votes, "Wins:", wins
+        print "Updating:", full_url, "Votes:", votes, "Wins:", wins
 
         c.execute("""
             UPDATE players
             SET brownlow_votes = ?,
                 brownlow_wins = ?
-            WHERE name = ?
-        """, (votes, wins, db_name))
+            WHERE player_id = ?
+        """, (votes, wins, full_url))
 
 conn.commit()
 conn.close()
