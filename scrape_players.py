@@ -45,12 +45,12 @@ conn.commit()
 
 
 # -------------------------------------------------------
-# SCRAPE TEAM PAGE
+# UPDATED SCRAPE TEAM PAGE (ALL-TIME VERSION)
 # -------------------------------------------------------
 
 def scrape_team(team_key):
 
-    url = "%s/afl/stats/teams/%s.html" % (BASE_URL, team_key)
+    url = "%s/afl/stats/alltime/%s.html" % (BASE_URL, team_key)
     print "Fetching:", url
 
     try:
@@ -68,21 +68,22 @@ def scrape_team(team_key):
     rows = table.find_all("tr")[1:]
 
     for row in rows:
+
         cols = row.find_all("td")
-        if len(cols) < 8:
+        if len(cols) < 9:
             continue
 
-        link = cols[0].find("a")
+        link = cols[2].find("a")
         if not link:
             continue
 
         name = link.get_text(strip=True)
         player_id = urljoin(url, link["href"])
 
-
         try:
-            games = int(cols[1].get_text(strip=True))
-            goals = int(cols[6].get_text(strip=True))
+            games_text = cols[6].get_text(strip=True)
+            games = int(games_text.split("(")[0].strip())
+            goals = int(cols[7].get_text(strip=True))
         except:
             continue
 
@@ -93,7 +94,7 @@ def scrape_team(team_key):
 
 
 # -------------------------------------------------------
-# SCRAPE INDIVIDUAL PLAYER PAGE
+# SCRAPE INDIVIDUAL PLAYER PAGE (UNCHANGED)
 # -------------------------------------------------------
 
 def scrape_player_details(player_id):
@@ -117,7 +118,7 @@ def scrape_player_details(player_id):
     last_year = None
 
     # ---------------------------------------------------
-    # FIND TOP 10 STATS BY SEARCHING ROW LABELS
+    # FIND TOP 10 STATS
     # ---------------------------------------------------
 
     for row in soup.find_all("tr"):
@@ -141,79 +142,6 @@ def scrape_player_details(player_id):
             max_handballs = value
         elif label == "Disposals":
             max_disposals = value
-
-    # ---------------------------------------------------
-    # FIND CAREER SPAN
-    # ---------------------------------------------------
-
-    years = []
-
-    for row in soup.find_all("tr"):
-        cols = row.find_all("td")
-        if not cols:
-            continue
-
-        try:
-            year = int(cols[0].get_text(strip=True))
-            if 1800 < year < 2100:
-                years.append(year)
-        except:
-            continue
-
-    if years:
-        first_year = min(years)
-        last_year = max(years)
-
-    return (
-        max_goals,
-        max_kicks,
-        max_handballs,
-        max_disposals,
-        first_year,
-        last_year
-    )
-
-
-    # ---------------------------------------------------
-    # FIND TOP 10 TABLE ROBUSTLY
-    # ---------------------------------------------------
-
-    for table in tables:
-
-        rows = table.find_all("tr")
-        if not rows:
-            continue
-
-        header_cells = rows[0].find_all(["td", "th"])
-        if not header_cells:
-            continue
-
-        header_text = header_cells[0].get_text(strip=True)
-
-        if header_text.startswith("Top 10"):
-
-            for row in rows[1:]:
-                cols = row.find_all("td")
-                if len(cols) < 2:
-                    continue
-
-                stat_name = cols[0].get_text(strip=True)
-
-                try:
-                    value = int(cols[1].get_text(strip=True))
-                except:
-                    continue
-
-                if stat_name == "Goals":
-                    max_goals = value
-                elif stat_name == "Kicks":
-                    max_kicks = value
-                elif stat_name == "Handballs":
-                    max_handballs = value
-                elif stat_name == "Disposals":
-                    max_disposals = value
-
-            break  # stop once Top 10 table found
 
     # ---------------------------------------------------
     # FIND CAREER SPAN

@@ -40,21 +40,26 @@ Team 2:
 
 <strong>Career</strong><br>
 
-Min Games: <input type="number" name="min_games" value="{{ filters.min_games or '' }}">
-Max Games: <input type="number" name="max_games" value="{{ filters.max_games or '' }}">
+Min Games:
+<input type="number" name="min_games" value="{{ filters.min_games or '' }}">
+
+Max Games:
+<input type="number" name="max_games" value="{{ filters.max_games or '' }}">
 
 <br>
 
-Min Goals: <input type="number" name="min_goals" value="{{ filters.min_goals or '' }}">
-Max Goals: <input type="number" name="max_goals" value="{{ filters.max_goals or '' }}">
+Min Goals:
+<input type="number" name="min_goals" value="{{ filters.min_goals or '' }}">
+
+Max Goals:
+<input type="number" name="max_goals" value="{{ filters.max_goals or '' }}">
 
 <br><br>
 
 <strong>Brownlow</strong><br>
 
-Winner:
-<input type="checkbox" name="brownlow_winner" value="1"
-{% if filters.brownlow_winner %}checked{% endif %}>
+Min Wins:
+<input type="number" name="min_wins" value="{{ filters.min_wins or '' }}">
 
 Min Votes:
 <input type="number" name="min_votes" value="{{ filters.min_votes or '' }}">
@@ -68,13 +73,14 @@ Min Votes:
     <option value="career_goals">Career Goals</option>
     <option value="max_goals_game">Max Goals (Game)</option>
     <option value="max_disposals_game">Max Disposals</option>
-	<option value="max_kicks_game">Max Kicks</option>
+    <option value="max_kicks_game">Max Kicks</option>
     <option value="brownlow_votes">Brownlow Votes</option>
+    <option value="brownlow_wins">Brownlow Wins</option>
 </select>
 
 <select name="sort_order">
-    <option value="ASC">Ascending</option>
     <option value="DESC">Descending</option>
+    <option value="ASC">Ascending</option>
 </select>
 
 <br><br>
@@ -92,10 +98,10 @@ Min Votes:
     <th>Goals</th>
     <th>Max G</th>
     <th>Max D</th>
-	<th>Max K</th>
-    <th>Brownlow Winner</th>
+    <th>Max K</th>
+    <th>Brownlow Wins</th>
     <th>Brownlow Votes</th>
-	<th>Career</th>
+    <th>Career</th>
 </tr>
 
 {% for p in players %}
@@ -110,10 +116,10 @@ Min Votes:
     <td>{{ p['career_goals'] }}</td>
     <td>{{ p['max_goals_game'] }}</td>
     <td>{{ p['max_disposals_game'] }}</td>
-	<td>{{ p['max_kicks_game'] }}</td>
-    <td>{{ "Yes" if p['brownlow_winner'] == 1 else "No" }}</td>
+    <td>{{ p['max_kicks_game'] }}</td>
+    <td>{{ p['brownlow_wins'] }}</td>
     <td>{{ p['brownlow_votes'] }}</td>
-	<td>{{ p['first_year'] }} - {{ p['last_year'] }}</td>
+    <td>{{ p['first_year'] }} - {{ p['last_year'] }}</td>
 </tr>
 {% endfor %}
 </table>

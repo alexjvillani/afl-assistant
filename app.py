@@ -25,7 +25,10 @@ def query_players(filters):
     query = "SELECT * FROM players WHERE 1=1"
     params = []
 
-    # --- Team filters
+    # ----------------------------
+    # TEAM FILTERS
+    # ----------------------------
+
     if filters["team1"]:
         query += " AND teams LIKE ?"
         params.append("%" + filters["team1"] + "%")
@@ -34,7 +37,10 @@ def query_players(filters):
         query += " AND teams LIKE ?"
         params.append("%" + filters["team2"] + "%")
 
-    # --- Games filters
+    # ----------------------------
+    # CAREER FILTERS
+    # ----------------------------
+
     if filters["min_games"]:
         query += " AND career_games >= ?"
         params.append(filters["min_games"])
@@ -43,7 +49,6 @@ def query_players(filters):
         query += " AND career_games <= ?"
         params.append(filters["max_games"])
 
-    # --- Goals filters
     if filters["min_goals"]:
         query += " AND career_goals >= ?"
         params.append(filters["min_goals"])
@@ -52,7 +57,10 @@ def query_players(filters):
         query += " AND career_goals <= ?"
         params.append(filters["max_goals"])
 
-    # --- Brownlow filters
+    # ----------------------------
+    # BROWNLOW FILTERS
+    # ----------------------------
+
     if filters["min_votes"]:
         query += " AND brownlow_votes >= ?"
         params.append(filters["min_votes"])
@@ -61,26 +69,28 @@ def query_players(filters):
         query += " AND brownlow_wins >= ?"
         params.append(filters["min_wins"])
 
-    # --- Sorting
+    # ----------------------------
+    # SORTING
+    # ----------------------------
+
     sort_column = filters["sort_by"] or "career_games"
-    sort_order = filters["sort_order"] or "ASC"
+    sort_order = filters["sort_order"] or "DESC"
 
     allowed_columns = [
         "career_games",
         "career_goals",
         "max_goals_game",
         "max_disposals_game",
+        "max_kicks_game",
         "brownlow_votes",
-        "brownlow_wins",
-        "first_year",
-        "last_year"
+        "brownlow_wins"
     ]
 
     if sort_column not in allowed_columns:
         sort_column = "career_games"
 
     if sort_order not in ["ASC", "DESC"]:
-        sort_order = "ASC"
+        sort_order = "DESC"
 
     query += " ORDER BY %s %s" % (sort_column, sort_order)
 
