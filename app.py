@@ -15,6 +15,14 @@ TEAM_OPTIONS = [
     "westcoast", "bullldogs"
 ]
 
+def get_player_options():
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    c.execute("SELECT player_id, name FROM players ORDER BY name")
+    rows = c.fetchall()
+    conn.close()
+    return rows
 
 def query_players(filters):
 
@@ -40,6 +48,21 @@ def query_players(filters):
     # ----------------------------
     # CAREER FILTERS
     # ----------------------------
+    
+    # Teammates filter (by player_id)
+    if filters["teammate_of"]:
+        query += """
+        AND player_id IN (
+            SELECT DISTINCT ps2.player_id
+            FROM player_seasons ps1
+            JOIN player_seasons ps2
+              ON ps1.year = ps2.year
+             AND ps1.team = ps2.team
+            WHERE ps1.player_id = ?
+              AND ps2.player_id != ps1.player_id
+        )
+        """
+        params.append(filters["teammate_of"])
 
     if filters["min_games"]:
         query += " AND career_games >= ?"
@@ -136,7 +159,6 @@ def query_players(filters):
     c.execute(query, params)
     results = c.fetchall()
     conn.close()
-
     return results
 
 
@@ -146,6 +168,7 @@ def index():
     filters = {
         "team1": request.args.get("team1"),
         "team2": request.args.get("team2"),
+        "teammate_of": request.args.get("teammate_of"),
         "min_games": request.args.get("min_games"),
         "max_games": request.args.get("max_games"),
         "min_goals": request.args.get("min_goals"),
@@ -176,13 +199,15 @@ def index():
     }
 
     players = query_players(filters)
+    player_options = get_player_options()
 
     return render_template(
         "index.html",
         players=players,
         teams=TEAM_OPTIONS,
         filters=filters,
-        visible=visible_columns
+        visible=visible_columns,
+        player_options=player_options
     )
 
 

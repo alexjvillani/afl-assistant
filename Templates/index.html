@@ -40,6 +40,21 @@ Team 2:
 
 <br><br>
 
+<strong>Teammates</strong><br>
+
+Teammates of:
+<input list="playerlist" name="teammate_of" style="width:420px;"
+       value="{{ filters.teammate_of or '' }}"
+       placeholder="Start typing a player name...">
+
+<datalist id="playerlist">
+{% for p in player_options %}
+    <option value="{{ p['player_id'] }}">{{ p['name'] }}</option>
+{% endfor %}
+</datalist>
+
+<br><br>
+
 <strong>Career</strong><br>
 
 Min Games:
