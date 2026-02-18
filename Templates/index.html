@@ -81,6 +81,14 @@ Max Height:
 
 <br><br>
 
+<strong>Single Game Peaks</strong><br>
+
+Min Max Goals (Game):
+<input type="number" name="min_max_goals_game" value="{{ filters.min_max_goals_game or '' }}">
+
+<br><br>
+
+
 <strong>Career Years</strong><br>
 
 Debuted After:
@@ -107,6 +115,7 @@ Min Votes:
 <select name="sort_by">
     <option value="career_games">Career Games</option>
     <option value="career_goals">Career Goals</option>
+	<option value="max_goals_game">Max Goals (Game)</option>
     <option value="brownlow_votes">Brownlow Votes</option>
     <option value="brownlow_wins">Brownlow Wins</option>
     <option value="gf_wins">GF Wins</option>

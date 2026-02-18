@@ -38,12 +38,13 @@ def query_players(filters):
     # ----------------------------
 
     if filters["team1"]:
-        query += " AND (',' || teams || ',') LIKE ?"
+        query += " AND (',' || REPLACE(teams, ' ', '') || ',') LIKE ?"
         params.append("%," + filters["team1"] + ",%")
 
     if filters["team2"]:
-        query += " AND (',' || teams || ',') LIKE ?"
+        query += " AND (',' || REPLACE(teams, ' ', '') || ',') LIKE ?"
         params.append("%," + filters["team2"] + ",%")
+
 
     # ----------------------------
     # CAREER FILTERS
@@ -79,6 +80,11 @@ def query_players(filters):
     if filters["max_goals"]:
         query += " AND career_goals <= ?"
         params.append(filters["max_goals"])
+        
+    if filters.get("min_max_goals_game"):
+        query += " AND max_goals_game >= ?"
+        params.append(filters["min_max_goals_game"])
+    
         
     # ----------------------------
     # HEIGHT FILTERS
@@ -145,7 +151,8 @@ def query_players(filters):
         "gf_wins",
         "height",
         "first_year",
-        "last_year"
+        "last_year",
+        "max_goals_game"
     ]
 
     if sort_column not in allowed_columns:
@@ -179,6 +186,7 @@ def index():
         "min_wins": request.args.get("min_wins"),
         "min_first_year": request.args.get("min_first_year"),
         "min_last_year": request.args.get("min_last_year"),
+        "min_max_goals_game": request.args.get("min_max_goals_game"),
         "sort_by": request.args.get("sort_by"),
         "sort_order": request.args.get("sort_order")
     }
