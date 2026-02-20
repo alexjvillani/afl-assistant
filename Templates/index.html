@@ -5,12 +5,14 @@
     <style>
         body { font-family: Arial; background:#f4f4f4; padding:20px; }
         table { border-collapse: collapse; width:100%; background:white; }
-        th, td { border:1px solid #ddd; padding:6px; text-align:center; }
+        th, td { border:1px solid #ddd; padding:6px; text-align:center; vertical-align:top; }
         th { background:#222; color:white; }
         tr:nth-child(even) { background:#f2f2f2; }
         .box { background:white; padding:15px; margin-bottom:20px; }
-        label { margin-right:15px; }
+        label { margin-right:15px; white-space:nowrap; }
         input[type="number"] { width:80px; }
+        .club-stats { font-size:12px; text-align:left; }
+        .club-stats div { margin-bottom:2px; }
     </style>
 </head>
 <body>
@@ -63,11 +65,25 @@ Min Games:
 Max Games:
 <input type="number" name="max_games" value="{{ filters.max_games or '' }}">
 
-Min Goals (All Time):
+Min Goals (Career):
 <input type="number" name="min_goals" value="{{ filters.min_goals or '' }}">
 
-Max Goals (All Time):
+Max Goals (Career):
 <input type="number" name="max_goals" value="{{ filters.max_goals or '' }}">
+
+<br><br>
+
+<strong>Season Peaks</strong><br>
+
+Min Goals (Season):
+<input type="number" name="min_max_goals_season" value="{{ filters.min_max_goals_season or '' }}">
+
+<br><br>
+
+<strong>Single Game Peaks</strong><br>
+
+Min Goals (Game):
+<input type="number" name="min_max_goals_game" value="{{ filters.min_max_goals_game or '' }}">
 
 <br><br>
 
@@ -81,14 +97,6 @@ Max Height:
 
 <br><br>
 
-<strong>Single Game Peaks</strong><br>
-
-Min Goals (Game):
-<input type="number" name="min_max_goals_game" value="{{ filters.min_max_goals_game or '' }}">
-
-<br><br>
-
-
 <strong>Career Years</strong><br>
 
 Debuted After:
@@ -98,7 +106,6 @@ Played After:
 <input type="number" name="min_last_year" value="{{ filters.min_last_year or '' }}">
 
 <br><br>
-
 
 <strong>Brownlow</strong><br>
 
@@ -115,13 +122,13 @@ Min Votes:
 <select name="sort_by">
     <option value="career_games">Career Games</option>
     <option value="career_goals">Career Goals</option>
-	<option value="max_goals_game">Max Goals (Game)</option>
+    <option value="max_goals_game">Max Goals (Game)</option>
+    <option value="max_goals_season">Max Goals (Season)</option>
     <option value="brownlow_votes">Brownlow Votes</option>
     <option value="brownlow_wins">Brownlow Wins</option>
     <option value="gf_wins">GF Wins</option>
-	<option value="first_year">First Year</option>
-	<option value="last_year">Last Year</option>
-
+    <option value="first_year">First Year</option>
+    <option value="last_year">Last Year</option>
 </select>
 
 <select name="sort_order">
@@ -133,14 +140,20 @@ Min Votes:
 
 <strong>Display Columns</strong><br>
 
-<label><input type="checkbox" name="show_max_goals" {% if visible.max_goals %}checked{% endif %}> Max Goals (Game)</label>
-<label><input type="checkbox" name="show_max_disposals" {% if visible.max_disposals %}checked{% endif %}> Max Disposals (Game)</label>
-<label><input type="checkbox" name="show_max_kicks" {% if visible.max_kicks %}checked{% endif %}> Max Kicks (Game)</label>
+<label><input type="checkbox" name="show_career_games" {% if visible.career_games %}checked{% endif %}> Career Games</label>
+<label><input type="checkbox" name="show_career_goals" {% if visible.career_goals %}checked{% endif %}> Career Goals</label>
+<label><input type="checkbox" name="show_max_goals_game" {% if visible.max_goals_game %}checked{% endif %}> Max Goals (Game)</label>
+<label><input type="checkbox" name="show_max_goals_season" {% if visible.max_goals_season %}checked{% endif %}> Max Goals (Season)</label>
+<label><input type="checkbox" name="show_max_goals_season_year" {% if visible.max_goals_season_year %}checked{% endif %}> Season Year</label>
+<label><input type="checkbox" name="show_max_disposals" {% if visible.max_disposals %}checked{% endif %}> Max Disposals</label>
+<label><input type="checkbox" name="show_max_kicks" {% if visible.max_kicks %}checked{% endif %}> Max Kicks</label>
 <label><input type="checkbox" name="show_wins" {% if visible.brownlow_wins %}checked{% endif %}> Brownlow Wins</label>
 <label><input type="checkbox" name="show_votes" {% if visible.brownlow_votes %}checked{% endif %}> Brownlow Votes</label>
-<label><input type="checkbox" name="show_gf_record" {% if visible.gf_record %}checked{% endif %}> GF Record (W-D-L)</label>
+<label><input type="checkbox" name="show_gf_apps" {% if visible.gf_appearances %}checked{% endif %}> GF Apps</label>
+<label><input type="checkbox" name="show_gf_wins" {% if visible.gf_wins %}checked{% endif %}> GF Wins</label>
 <label><input type="checkbox" name="show_height" {% if visible.height %}checked{% endif %}> Height</label>
-<label><input type="checkbox" name="show_years" {% if visible.years %}checked{% endif %}>Years Played</label>
+<label><input type="checkbox" name="show_years" {% if visible.years %}checked{% endif %}> Years Played</label>
+<label><input type="checkbox" name="show_club_stats" {% if visible.club_stats %}checked{% endif %}> Club Breakdown</label>
 
 <br><br>
 
@@ -153,44 +166,51 @@ Min Votes:
 <tr>
     <th>Name</th>
     <th>Teams</th>
-    <th>Games</th>
-    <th>Goals</th>
 
-    {% if visible.max_goals %}<th>Max G (Game)</th>{% endif %}
-    {% if visible.max_disposals %}<th>Max D (Game)</th>{% endif %}
-    {% if visible.max_kicks %}<th>Max K (Game)</th>{% endif %}
-    {% if visible.brownlow_wins %}<th>Brownlow Wins</th>{% endif %}
-    {% if visible.brownlow_votes %}<th>Brownlow Votes</th>{% endif %}
-    {% if visible.gf_record %}<th>GF Record</th>{% endif %}
-	{% if visible.height %}<th>Height (cm)</th>{% endif %}
-	{% if visible.years %}<th>Years</th>{% endif %}
-
-
-    <th>Career</th>
+    {% if visible.career_games %}<th>Games</th>{% endif %}
+    {% if visible.career_goals %}<th>Goals</th>{% endif %}
+    {% if visible.max_goals_game %}<th>Max G (Game)</th>{% endif %}
+    {% if visible.max_goals_season %}<th>Max G (Season)</th>{% endif %}
+    {% if visible.max_goals_season_year %}<th>Season</th>{% endif %}
+    {% if visible.max_disposals %}<th>Max D</th>{% endif %}
+    {% if visible.max_kicks %}<th>Max K</th>{% endif %}
+    {% if visible.brownlow_wins %}<th>BL Wins</th>{% endif %}
+    {% if visible.brownlow_votes %}<th>BL Votes</th>{% endif %}
+    {% if visible.gf_appearances %}<th>GF Apps</th>{% endif %}
+    {% if visible.gf_wins %}<th>GF Wins</th>{% endif %}
+    {% if visible.height %}<th>Height</th>{% endif %}
+    {% if visible.years %}<th>Years</th>{% endif %}
+    {% if visible.club_stats %}<th>Club Stats</th>{% endif %}
 </tr>
 
 {% for p in players %}
 <tr>
     <td><a href="{{ p['player_id'] }}" target="_blank">{{ p['name'] }}</a></td>
     <td>{{ p['teams'] }}</td>
-    <td>{{ p['career_games'] }}</td>
-    <td>{{ p['career_goals'] }}</td>
 
-    {% if visible.max_goals %}<td>{{ p['max_goals_game'] }}</td>{% endif %}
+    {% if visible.career_games %}<td>{{ p['career_games'] }}</td>{% endif %}
+    {% if visible.career_goals %}<td>{{ p['career_goals'] }}</td>{% endif %}
+    {% if visible.max_goals_game %}<td>{{ p['max_goals_game'] }}</td>{% endif %}
+    {% if visible.max_goals_season %}<td>{{ p['max_goals_season'] }}</td>{% endif %}
+    {% if visible.max_goals_season_year %}<td>{{ p['max_goals_season_year'] }}</td>{% endif %}
     {% if visible.max_disposals %}<td>{{ p['max_disposals_game'] }}</td>{% endif %}
     {% if visible.max_kicks %}<td>{{ p['max_kicks_game'] }}</td>{% endif %}
     {% if visible.brownlow_wins %}<td>{{ p['brownlow_wins'] }}</td>{% endif %}
     {% if visible.brownlow_votes %}<td>{{ p['brownlow_votes'] }}</td>{% endif %}
-    {% if visible.gf_record %}<td>{{ p['gf_wins'] or 0 }}-{{ p['gf_draws'] or 0 }}-{{ p['gf_losses'] or 0 }}</td>{% endif %}
-	{% if visible.height %}<td>{{ p['height'] or '' }}</td>{% endif %}
-	{% if visible.years %}<td>{{ p['first_year'] }} - {{ p['last_year'] }}</td>{% endif %}
+    {% if visible.gf_appearances %}<td>{{ p['gf_appearances'] or 0 }}</td>{% endif %}
+    {% if visible.gf_wins %}<td>{{ p['gf_wins'] or 0 }}</td>{% endif %}
+    {% if visible.height %}<td>{{ p['height'] or '' }}</td>{% endif %}
+    {% if visible.years %}<td>{{ p['first_year'] }} - {{ p['last_year'] }}</td>{% endif %}
 
-
-
-    <td>{{ p['first_year'] }} - {{ p['last_year'] }}</td>
+    {% if visible.club_stats %}
+    <td class="club-stats">
+        {% for row in get_player_club_stats(p['player_id']) %}
+            <div>{{ row.team }}: {{ row.games }}g / {{ row.goals }}gl</div>
+        {% endfor %}
+    </td>
+    {% endif %}
 </tr>
 {% endfor %}
-
 </table>
 
 </body>
