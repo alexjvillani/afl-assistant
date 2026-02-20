@@ -2,6 +2,7 @@
 
 from flask import Flask, render_template, request
 import sqlite3
+import re
 
 app = Flask(__name__)
 
@@ -35,9 +36,6 @@ def get_player_options():
 
 
 def get_player_club_stats(player_id):
-    """
-    Per-club games & goals for a player.
-    """
     conn = get_db()
     c = conn.cursor()
     c.execute("""
@@ -52,6 +50,90 @@ def get_player_club_stats(player_id):
 
 
 # -------------------------------------------------
+# ALL-AUSTRALIAN HELPERS
+# -------------------------------------------------
+
+def get_aa_years_map():
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("""
+        SELECT player_id, year
+        FROM all_australian_selections
+        ORDER BY year DESC
+    """)
+    aa = {}
+    for pid, yr in c.fetchall():
+        aa.setdefault(pid, []).append(yr)
+    conn.close()
+    return aa
+
+
+# -------------------------------------------------
+# PYTHON 2.7 / FLASK SAFETY
+# -------------------------------------------------
+
+def scalar(v):
+    if isinstance(v, (list, tuple)):
+        return v[0] if v else None
+    return v
+
+
+# -------------------------------------------------
+# DRAFT PICK NORMALISATION
+# -------------------------------------------------
+
+def normalise_draft_pick(raw):
+    if not raw:
+        return ("", None)
+
+    r = raw.strip().lower()
+
+    if "father" in r:
+        return ("FS", None)
+    if "foundation" in r:
+        return ("FDN", None)
+    if "academy" in r:
+        return ("ACA", None)
+    if "rookie" in r:
+        return ("R", None)
+    if "pre" in r or "zone" in r:
+        return ("PL", None)
+
+    m = re.search(r"(\d+)", r)
+    if m:
+        val = int(m.group(1))
+        return ("Pick %d" % val, val)
+
+    return (raw, None)
+
+
+def get_best_aa_draft_picks():
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("""
+        SELECT player_id, draft_pick
+        FROM all_australian_selections
+        WHERE draft_pick IS NOT NULL
+    """)
+
+    best = {}
+
+    for pid, raw in c.fetchall():
+        disp, num = normalise_draft_pick(raw)
+
+        if pid not in best:
+            best[pid] = {"display": disp, "numeric": num}
+            continue
+
+        cur = best[pid]["numeric"]
+        if num is not None and (cur is None or num < cur):
+            best[pid] = {"display": disp, "numeric": num}
+
+    conn.close()
+    return best
+
+
+# -------------------------------------------------
 # MAIN QUERY LOGIC
 # -------------------------------------------------
 
@@ -63,10 +145,6 @@ def query_players(filters):
     query = "SELECT * FROM players WHERE 1=1"
     params = []
 
-    # ----------------------------
-    # TEAM FILTERS
-    # ----------------------------
-
     if filters.get("team1"):
         query += " AND (',' || REPLACE(teams, ' ', '') || ',') LIKE ?"
         params.append("%," + filters["team1"] + ",%")
@@ -74,10 +152,6 @@ def query_players(filters):
     if filters.get("team2"):
         query += " AND (',' || REPLACE(teams, ' ', '') || ',') LIKE ?"
         params.append("%," + filters["team2"] + ",%")
-
-    # ----------------------------
-    # TEAMMATE FILTER
-    # ----------------------------
 
     if filters.get("teammate_of"):
         query += """
@@ -92,10 +166,6 @@ def query_players(filters):
         )
         """
         params.append(filters["teammate_of"])
-
-    # ----------------------------
-    # CAREER TOTAL FILTERS
-    # ----------------------------
 
     if filters.get("min_games"):
         query += " AND career_games >= ?"
@@ -113,33 +183,17 @@ def query_players(filters):
         query += " AND career_goals <= ?"
         params.append(filters["max_goals"])
 
-    # ----------------------------
-    # SINGLE-GAME PEAKS
-    # ----------------------------
-
     if filters.get("min_max_goals_game"):
         query += " AND max_goals_game >= ?"
         params.append(filters["min_max_goals_game"])
-
-    if filters.get("min_max_disposals_game"):
-        query += " AND max_disposals_game >= ?"
-        params.append(filters["min_max_disposals_game"])
-
-    # ----------------------------
-    # SEASON PEAKS
-    # ----------------------------
 
     if filters.get("min_max_goals_season"):
         query += " AND max_goals_season >= ?"
         params.append(filters["min_max_goals_season"])
 
-    if filters.get("max_max_goals_season"):
-        query += " AND max_goals_season <= ?"
-        params.append(filters["max_max_goals_season"])
-
-    # ----------------------------
-    # HEIGHT
-    # ----------------------------
+    if filters.get("min_all_aus"):
+        query += " AND all_aus_count >= ?"
+        params.append(filters["min_all_aus"])
 
     if filters.get("min_height"):
         query += " AND height >= ?"
@@ -149,10 +203,6 @@ def query_players(filters):
         query += " AND height <= ?"
         params.append(filters["max_height"])
 
-    # ----------------------------
-    # CAREER SPAN
-    # ----------------------------
-
     if filters.get("min_first_year"):
         query += " AND first_year >= ?"
         params.append(filters["min_first_year"])
@@ -161,139 +211,63 @@ def query_players(filters):
         query += " AND last_year >= ?"
         params.append(filters["min_last_year"])
 
-    # ----------------------------
-    # SORTING (MAX VISIBILITY)
-    # ----------------------------
-
     sort_column = filters.get("sort_by") or "career_games"
     sort_order = filters.get("sort_order") or "DESC"
-
-    allowed_columns = [
-        # Career
-        "career_games",
-        "career_goals",
-
-        # Single-game peaks
-        "max_goals_game",
-        "max_disposals_game",
-        "max_kicks_game",
-        "max_handballs_game",
-
-        # Season peaks
-        "max_goals_season",
-        "max_goals_season_year",
-
-        # Awards
-        "brownlow_votes",
-        "brownlow_wins",
-
-        # Finals
-        "gf_appearances",
-        "gf_wins",
-
-        # Bio
-        "height",
-        "first_year",
-        "last_year"
-    ]
-
-    if sort_column not in allowed_columns:
-        sort_column = "career_games"
-
-    if sort_order not in ("ASC", "DESC"):
-        sort_order = "DESC"
 
     query += " ORDER BY %s %s" % (sort_column, sort_order)
 
     c.execute(query, params)
-    results = c.fetchall()
+    rows = c.fetchall()
     conn.close()
-    return results
+    return rows
 
 
 # -------------------------------------------------
-# ROUTES
+# ROUTE
 # -------------------------------------------------
 
 @app.route("/", methods=["GET"])
 def index():
 
-    filters = {
-        # Team & teammate
-        "team1": request.args.get("team1"),
-        "team2": request.args.get("team2"),
-        "teammate_of": request.args.get("teammate_of"),
+    raw = dict(request.args)
 
-        # Career
-        "min_games": request.args.get("min_games"),
-        "max_games": request.args.get("max_games"),
-        "min_goals": request.args.get("min_goals"),
-        "max_goals": request.args.get("max_goals"),
+    filters = {}
+    visible = {}
 
-        # Single-game
-        "min_max_goals_game": request.args.get("min_max_goals_game"),
-        "min_max_disposals_game": request.args.get("min_max_disposals_game"),
+    # 🔒 Separate filters vs checkboxes (NEW)
+    for k, v in raw.items():
+        val = scalar(v)
 
-        # Season
-        "min_max_goals_season": request.args.get("min_max_goals_season"),
-        "max_max_goals_season": request.args.get("max_max_goals_season"),
-
-        # Bio
-        "min_height": request.args.get("min_height"),
-        "max_height": request.args.get("max_height"),
-        "min_first_year": request.args.get("min_first_year"),
-        "min_last_year": request.args.get("min_last_year"),
-
-        # Sorting
-        "sort_by": request.args.get("sort_by"),
-        "sort_order": request.args.get("sort_order"),
-    }
-
-    # ----------------------------
-    # COLUMN VISIBILITY FLAGS
-    # ----------------------------
-
-    visible_columns = {
-        # Career
-        "career_games": request.args.get("show_career_games"),
-        "career_goals": request.args.get("show_career_goals"),
-
-        # Single-game
-        "max_goals_game": request.args.get("show_max_goals_game"),
-        "max_disposals_game": request.args.get("show_max_disposals"),
-        "max_kicks_game": request.args.get("show_max_kicks"),
-        "max_handballs_game": request.args.get("show_max_handballs"),
-
-        # Season
-        "max_goals_season": request.args.get("show_max_goals_season"),
-        "max_goals_season_year": request.args.get("show_max_goals_season_year"),
-
-        # Awards
-        "brownlow_votes": request.args.get("show_votes"),
-        "brownlow_wins": request.args.get("show_wins"),
-
-        # Finals
-        "gf_appearances": request.args.get("show_gf_apps"),
-        "gf_wins": request.args.get("show_gf_wins"),
-
-        # Bio
-        "height": request.args.get("show_height"),
-        "years": request.args.get("show_years"),
-
-        # Club breakdown
-        "club_stats": request.args.get("show_club_stats"),
-    }
+        if k.startswith("show_"):
+            visible[k.replace("show_", "")] = True
+        else:
+            filters[k] = val
 
     players = query_players(filters)
     player_options = get_player_options()
+    aa_years = get_aa_years_map()
+    best_aa_draft = get_best_aa_draft_picks()
+
+    # Post-filter: numeric AA draft picks only
+    if filters.get("max_aa_draft_pick"):
+        try:
+            limit = int(filters["max_aa_draft_pick"])
+            players = [
+                p for p in players
+                if best_aa_draft.get(p["player_id"], {}).get("numeric", 999) <= limit
+            ]
+        except:
+            pass
 
     return render_template(
         "index.html",
         players=players,
         teams=TEAM_OPTIONS,
         filters=filters,
-        visible=visible_columns,
+        visible=visible,  # ✅ FIXED
         player_options=player_options,
+        aa_years=aa_years,
+        best_aa_draft=best_aa_draft,
         get_player_club_stats=get_player_club_stats
     )
 

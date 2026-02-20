@@ -13,6 +13,8 @@
         input[type="number"] { width:80px; }
         .club-stats { font-size:12px; text-align:left; }
         .club-stats div { margin-bottom:2px; }
+        .aa-years { font-size:11px; color:#555; text-align:left; }
+        .draft-pick { font-size:11px; color:#333; font-weight:bold; }
     </style>
 </head>
 <body>
@@ -87,6 +89,16 @@ Min Goals (Game):
 
 <br><br>
 
+<strong>All-Australian</strong><br>
+
+Min Selections:
+<input type="number" name="min_all_aus" value="{{ filters.min_all_aus or '' }}">
+
+Max Draft Pick (AA):
+<input type="number" name="max_aa_draft_pick" value="{{ filters.max_aa_draft_pick or '' }}">
+
+<br><br>
+
 <strong>Height (cm)</strong><br>
 
 Min Height:
@@ -124,6 +136,7 @@ Min Votes:
     <option value="career_goals">Career Goals</option>
     <option value="max_goals_game">Max Goals (Game)</option>
     <option value="max_goals_season">Max Goals (Season)</option>
+    <option value="all_aus_count">All-Australian Selections</option>
     <option value="brownlow_votes">Brownlow Votes</option>
     <option value="brownlow_wins">Brownlow Wins</option>
     <option value="gf_wins">GF Wins</option>
@@ -145,8 +158,13 @@ Min Votes:
 <label><input type="checkbox" name="show_max_goals_game" {% if visible.max_goals_game %}checked{% endif %}> Max Goals (Game)</label>
 <label><input type="checkbox" name="show_max_goals_season" {% if visible.max_goals_season %}checked{% endif %}> Max Goals (Season)</label>
 <label><input type="checkbox" name="show_max_goals_season_year" {% if visible.max_goals_season_year %}checked{% endif %}> Season Year</label>
-<label><input type="checkbox" name="show_max_disposals" {% if visible.max_disposals %}checked{% endif %}> Max Disposals</label>
-<label><input type="checkbox" name="show_max_kicks" {% if visible.max_kicks %}checked{% endif %}> Max Kicks</label>
+<label><input type="checkbox" name="show_max_disposals" {% if visible.max_disposals_game %}checked{% endif %}> Max Disposals</label>
+<label><input type="checkbox" name="show_max_kicks" {% if visible.max_kicks_game %}checked{% endif %}> Max Kicks</label>
+
+<label><input type="checkbox" name="show_all_aus" {% if visible.all_aus %}checked{% endif %}> All-Australian Count</label>
+<label><input type="checkbox" name="show_all_aus_years" {% if visible.all_aus_years %}checked{% endif %}> AA Years</label>
+<label><input type="checkbox" name="show_aa_draft_pick" {% if visible.aa_draft_pick %}checked{% endif %}> AA Draft Pick</label>
+
 <label><input type="checkbox" name="show_wins" {% if visible.brownlow_wins %}checked{% endif %}> Brownlow Wins</label>
 <label><input type="checkbox" name="show_votes" {% if visible.brownlow_votes %}checked{% endif %}> Brownlow Votes</label>
 <label><input type="checkbox" name="show_gf_apps" {% if visible.gf_appearances %}checked{% endif %}> GF Apps</label>
@@ -172,8 +190,11 @@ Min Votes:
     {% if visible.max_goals_game %}<th>Max G (Game)</th>{% endif %}
     {% if visible.max_goals_season %}<th>Max G (Season)</th>{% endif %}
     {% if visible.max_goals_season_year %}<th>Season</th>{% endif %}
-    {% if visible.max_disposals %}<th>Max D</th>{% endif %}
-    {% if visible.max_kicks %}<th>Max K</th>{% endif %}
+    {% if visible.max_disposals_game %}<th>Max D</th>{% endif %}
+    {% if visible.max_kicks_game %}<th>Max K</th>{% endif %}
+    {% if visible.all_aus %}<th>AA</th>{% endif %}
+    {% if visible.all_aus_years %}<th>AA Years</th>{% endif %}
+    {% if visible.aa_draft_pick %}<th>AA Draft Pick</th>{% endif %}
     {% if visible.brownlow_wins %}<th>BL Wins</th>{% endif %}
     {% if visible.brownlow_votes %}<th>BL Votes</th>{% endif %}
     {% if visible.gf_appearances %}<th>GF Apps</th>{% endif %}
@@ -193,8 +214,22 @@ Min Votes:
     {% if visible.max_goals_game %}<td>{{ p['max_goals_game'] }}</td>{% endif %}
     {% if visible.max_goals_season %}<td>{{ p['max_goals_season'] }}</td>{% endif %}
     {% if visible.max_goals_season_year %}<td>{{ p['max_goals_season_year'] }}</td>{% endif %}
-    {% if visible.max_disposals %}<td>{{ p['max_disposals_game'] }}</td>{% endif %}
-    {% if visible.max_kicks %}<td>{{ p['max_kicks_game'] }}</td>{% endif %}
+    {% if visible.max_disposals_game %}<td>{{ p['max_disposals_game'] }}</td>{% endif %}
+    {% if visible.max_kicks_game %}<td>{{ p['max_kicks_game'] }}</td>{% endif %}
+    {% if visible.all_aus %}<td>{{ p['all_aus_count'] or 0 }}</td>{% endif %}
+    {% if visible.all_aus_years %}
+        <td class="aa-years">
+            {% for y in aa_years.get(p['player_id'], []) %}
+                {{ y }}{% if not loop.last %}, {% endif %}
+            {% endfor %}
+        </td>
+    {% endif %}
+    {% if visible.aa_draft_pick %}
+        <td class="draft-pick">
+            {% set dp = best_aa_draft.get(p['player_id']) %}
+            {% if dp %}{{ dp.display }}{% else %}—{% endif %}
+        </td>
+    {% endif %}
     {% if visible.brownlow_wins %}<td>{{ p['brownlow_wins'] }}</td>{% endif %}
     {% if visible.brownlow_votes %}<td>{{ p['brownlow_votes'] }}</td>{% endif %}
     {% if visible.gf_appearances %}<td>{{ p['gf_appearances'] or 0 }}</td>{% endif %}
