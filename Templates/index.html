@@ -63,10 +63,10 @@ Min Games:
 Max Games:
 <input type="number" name="max_games" value="{{ filters.max_games or '' }}">
 
-Min Goals:
+Min Goals (All Time):
 <input type="number" name="min_goals" value="{{ filters.min_goals or '' }}">
 
-Max Goals:
+Max Goals (All Time):
 <input type="number" name="max_goals" value="{{ filters.max_goals or '' }}">
 
 <br><br>
@@ -83,7 +83,7 @@ Max Height:
 
 <strong>Single Game Peaks</strong><br>
 
-Min Max Goals (Game):
+Min Goals (Game):
 <input type="number" name="min_max_goals_game" value="{{ filters.min_max_goals_game or '' }}">
 
 <br><br>
@@ -133,9 +133,9 @@ Min Votes:
 
 <strong>Display Columns</strong><br>
 
-<label><input type="checkbox" name="show_max_goals" {% if visible.max_goals %}checked{% endif %}> Max Goals</label>
-<label><input type="checkbox" name="show_max_disposals" {% if visible.max_disposals %}checked{% endif %}> Max Disposals</label>
-<label><input type="checkbox" name="show_max_kicks" {% if visible.max_kicks %}checked{% endif %}> Max Kicks</label>
+<label><input type="checkbox" name="show_max_goals" {% if visible.max_goals %}checked{% endif %}> Max Goals (Game)</label>
+<label><input type="checkbox" name="show_max_disposals" {% if visible.max_disposals %}checked{% endif %}> Max Disposals (Game)</label>
+<label><input type="checkbox" name="show_max_kicks" {% if visible.max_kicks %}checked{% endif %}> Max Kicks (Game)</label>
 <label><input type="checkbox" name="show_wins" {% if visible.brownlow_wins %}checked{% endif %}> Brownlow Wins</label>
 <label><input type="checkbox" name="show_votes" {% if visible.brownlow_votes %}checked{% endif %}> Brownlow Votes</label>
 <label><input type="checkbox" name="show_gf_record" {% if visible.gf_record %}checked{% endif %}> GF Record (W-D-L)</label>
@@ -156,9 +156,9 @@ Min Votes:
     <th>Games</th>
     <th>Goals</th>
 
-    {% if visible.max_goals %}<th>Max G</th>{% endif %}
-    {% if visible.max_disposals %}<th>Max D</th>{% endif %}
-    {% if visible.max_kicks %}<th>Max K</th>{% endif %}
+    {% if visible.max_goals %}<th>Max G (Game)</th>{% endif %}
+    {% if visible.max_disposals %}<th>Max D (Game)</th>{% endif %}
+    {% if visible.max_kicks %}<th>Max K (Game)</th>{% endif %}
     {% if visible.brownlow_wins %}<th>Brownlow Wins</th>{% endif %}
     {% if visible.brownlow_votes %}<th>Brownlow Votes</th>{% endif %}
     {% if visible.gf_record %}<th>GF Record</th>{% endif %}
