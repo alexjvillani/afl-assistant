@@ -69,6 +69,26 @@ def get_aa_years_map():
 
 
 # -------------------------------------------------
+# RISING STAR HELPERS (NEW)
+# -------------------------------------------------
+
+def get_rs_counts():
+    """
+    player_id -> rising star nomination count
+    """
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("""
+        SELECT player_id, COUNT(*) 
+        FROM rising_star_nominations
+        GROUP BY player_id
+    """)
+    rs = {pid: cnt for pid, cnt in c.fetchall()}
+    conn.close()
+    return rs
+
+
+# -------------------------------------------------
 # PYTHON 2.7 / FLASK SAFETY
 # -------------------------------------------------
 
@@ -234,7 +254,7 @@ def index():
     filters = {}
     visible = {}
 
-    # 🔒 Separate filters vs checkboxes (NEW)
+    # 🔒 Separate filters vs checkboxes
     for k, v in raw.items():
         val = scalar(v)
 
@@ -247,6 +267,7 @@ def index():
     player_options = get_player_options()
     aa_years = get_aa_years_map()
     best_aa_draft = get_best_aa_draft_picks()
+    rs_counts = get_rs_counts()   # ⭐ NEW
 
     # Post-filter: numeric AA draft picks only
     if filters.get("max_aa_draft_pick"):
@@ -259,15 +280,27 @@ def index():
         except:
             pass
 
+    # Post-filter: Rising Star nominations (NEW)
+    if filters.get("min_rs_noms"):
+        try:
+            limit = int(filters["min_rs_noms"])
+            players = [
+                p for p in players
+                if rs_counts.get(p["player_id"], 0) >= limit
+            ]
+        except:
+            pass
+
     return render_template(
         "index.html",
         players=players,
         teams=TEAM_OPTIONS,
         filters=filters,
-        visible=visible,  # ✅ FIXED
+        visible=visible,
         player_options=player_options,
         aa_years=aa_years,
         best_aa_draft=best_aa_draft,
+        rs_counts=rs_counts,            # ⭐ NEW
         get_player_club_stats=get_player_club_stats
     )
 
