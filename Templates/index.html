@@ -90,6 +90,32 @@ Min Goals (Game):
 
 <br><br>
 
+<span class="sub"><strong>Other Single Game Peaks</strong></span><br><br>
+
+Min Marks:
+<input type="number" name="min_max_marks_game" value="{{ filters.min_max_marks_game or '' }}">
+
+Max Marks:
+<input type="number" name="max_max_marks_game" value="{{ filters.max_max_marks_game or '' }}">
+
+<br><br>
+
+Min Hitouts:
+<input type="number" name="min_max_hitouts_game" value="{{ filters.min_max_hitouts_game or '' }}">
+
+Max Hitouts:
+<input type="number" name="max_max_hitouts_game" value="{{ filters.max_max_hitouts_game or '' }}">
+
+<br><br>
+
+Min Tackles:
+<input type="number" name="min_max_tackles_game" value="{{ filters.min_max_tackles_game or '' }}">
+
+Max Tackles:
+<input type="number" name="max_max_tackles_game" value="{{ filters.max_max_tackles_game or '' }}">
+
+<br><br>
+
 <strong>All-Australian</strong><br>
 
 Min Selections:
@@ -116,6 +142,8 @@ Max Height:
 <input type="number" name="max_height" value="{{ filters.max_height or '' }}">
 
 <br><br>
+
+
 
 <strong>Career Years</strong><br>
 
@@ -169,6 +197,11 @@ Min Votes:
 <label><input type="checkbox" name="show_max_disposals" {% if visible.max_disposals_game %}checked{% endif %}> Max Disposals</label>
 <label><input type="checkbox" name="show_max_kicks" {% if visible.max_kicks_game %}checked{% endif %}> Max Kicks</label>
 
+<!-- ✅ ADDITIVE -->
+<label><input type="checkbox" name="show_max_marks_game" {% if visible.max_marks_game %}checked{% endif %}> Max Marks</label>
+<label><input type="checkbox" name="show_max_hitouts_game" {% if visible.max_hitouts_game %}checked{% endif %}> Max Hitouts</label>
+<label><input type="checkbox" name="show_max_tackles_game" {% if visible.max_tackles_game %}checked{% endif %}> Max Tackles</label>
+
 <label><input type="checkbox" name="show_all_aus" {% if visible.all_aus %}checked{% endif %}> All-Australian Count</label>
 <label><input type="checkbox" name="show_all_aus_years" {% if visible.all_aus_years %}checked{% endif %}> AA Years</label>
 <label><input type="checkbox" name="show_aa_draft_pick" {% if visible.aa_draft_pick %}checked{% endif %}> AA Draft Pick</label>
@@ -202,6 +235,12 @@ Min Votes:
     {% if visible.max_goals_season_year %}<th>Season</th>{% endif %}
     {% if visible.max_disposals_game %}<th>Max D</th>{% endif %}
     {% if visible.max_kicks_game %}<th>Max K</th>{% endif %}
+
+    <!-- ✅ ADDITIVE -->
+    {% if visible.max_marks_game %}<th>Max M</th>{% endif %}
+    {% if visible.max_hitouts_game %}<th>Max HO</th>{% endif %}
+    {% if visible.max_tackles_game %}<th>Max T</th>{% endif %}
+
     {% if visible.all_aus %}<th>AA</th>{% endif %}
     {% if visible.all_aus_years %}<th>AA Years</th>{% endif %}
     {% if visible.aa_draft_pick %}<th>AA Draft</th>{% endif %}
@@ -227,6 +266,12 @@ Min Votes:
     {% if visible.max_goals_season_year %}<td>{{ p['max_goals_season_year'] }}</td>{% endif %}
     {% if visible.max_disposals_game %}<td>{{ p['max_disposals_game'] }}</td>{% endif %}
     {% if visible.max_kicks_game %}<td>{{ p['max_kicks_game'] }}</td>{% endif %}
+
+    <!-- ✅ ADDITIVE -->
+    {% if visible.max_marks_game %}<td>{{ p['max_marks_game'] or 0 }}</td>{% endif %}
+    {% if visible.max_hitouts_game %}<td>{{ p['max_hitouts_game'] or 0 }}</td>{% endif %}
+    {% if visible.max_tackles_game %}<td>{{ p['max_tackles_game'] or 0 }}</td>{% endif %}
+
     {% if visible.all_aus %}<td>{{ p['all_aus_count'] or 0 }}</td>{% endif %}
     {% if visible.all_aus_years %}
         <td class="aa-years">

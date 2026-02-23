@@ -17,6 +17,40 @@ TEAM_OPTIONS = [
 ]
 
 # -------------------------------------------------
+# SCHEMA SAFETY (Top-10 columns)
+# -------------------------------------------------
+
+def ensure_top10_columns():
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+
+    c.execute("PRAGMA table_info(players)")
+    existing = set([row[1] for row in c.fetchall()])
+
+    columns = [
+        ("max_marks_game", "INTEGER"),
+        ("max_hitouts_game", "INTEGER"),
+        ("max_tackles_game", "INTEGER"),
+    ]
+
+    for col, coltype in columns:
+        if col not in existing:
+            try:
+                print "Adding missing column:", col
+                c.execute(
+                    "ALTER TABLE players ADD COLUMN %s %s DEFAULT 0"
+                    % (col, coltype)
+                )
+            except Exception as e:
+                print "!! Failed adding column", col, ":", e
+
+    conn.commit()
+    conn.close()
+
+
+ensure_top10_columns()
+
+# -------------------------------------------------
 # DATABASE HELPERS
 # -------------------------------------------------
 
@@ -69,17 +103,14 @@ def get_aa_years_map():
 
 
 # -------------------------------------------------
-# RISING STAR HELPERS (NEW)
+# RISING STAR HELPERS
 # -------------------------------------------------
 
 def get_rs_counts():
-    """
-    player_id -> rising star nomination count
-    """
     conn = get_db()
     c = conn.cursor()
     c.execute("""
-        SELECT player_id, COUNT(*) 
+        SELECT player_id, COUNT(*)
         FROM rising_star_nominations
         GROUP BY player_id
     """)
@@ -89,7 +120,7 @@ def get_rs_counts():
 
 
 # -------------------------------------------------
-# PYTHON 2.7 / FLASK SAFETY
+# PYTHON 2.7 SAFETY
 # -------------------------------------------------
 
 def scalar(v):
@@ -211,6 +242,30 @@ def query_players(filters):
         query += " AND max_goals_season >= ?"
         params.append(filters["min_max_goals_season"])
 
+    if filters.get("min_max_marks_game"):
+        query += " AND max_marks_game >= ?"
+        params.append(filters["min_max_marks_game"])
+
+    if filters.get("max_max_marks_game"):
+        query += " AND max_marks_game <= ?"
+        params.append(filters["max_max_marks_game"])
+
+    if filters.get("min_max_hitouts_game"):
+        query += " AND max_hitouts_game >= ?"
+        params.append(filters["min_max_hitouts_game"])
+
+    if filters.get("max_max_hitouts_game"):
+        query += " AND max_hitouts_game <= ?"
+        params.append(filters["max_max_hitouts_game"])
+
+    if filters.get("min_max_tackles_game"):
+        query += " AND max_tackles_game >= ?"
+        params.append(filters["min_max_tackles_game"])
+
+    if filters.get("max_max_tackles_game"):
+        query += " AND max_tackles_game <= ?"
+        params.append(filters["max_max_tackles_game"])
+
     if filters.get("min_all_aus"):
         query += " AND all_aus_count >= ?"
         params.append(filters["min_all_aus"])
@@ -254,10 +309,8 @@ def index():
     filters = {}
     visible = {}
 
-    # 🔒 Separate filters vs checkboxes
     for k, v in raw.items():
         val = scalar(v)
-
         if k.startswith("show_"):
             visible[k.replace("show_", "")] = True
         else:
@@ -267,9 +320,8 @@ def index():
     player_options = get_player_options()
     aa_years = get_aa_years_map()
     best_aa_draft = get_best_aa_draft_picks()
-    rs_counts = get_rs_counts()   # ⭐ NEW
+    rs_counts = get_rs_counts()
 
-    # Post-filter: numeric AA draft picks only
     if filters.get("max_aa_draft_pick"):
         try:
             limit = int(filters["max_aa_draft_pick"])
@@ -280,7 +332,6 @@ def index():
         except:
             pass
 
-    # Post-filter: Rising Star nominations (NEW)
     if filters.get("min_rs_noms"):
         try:
             limit = int(filters["min_rs_noms"])
@@ -300,7 +351,7 @@ def index():
         player_options=player_options,
         aa_years=aa_years,
         best_aa_draft=best_aa_draft,
-        rs_counts=rs_counts,            # ⭐ NEW
+        rs_counts=rs_counts,
         get_player_club_stats=get_player_club_stats
     )
 
