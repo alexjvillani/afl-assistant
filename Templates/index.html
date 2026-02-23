@@ -187,36 +187,64 @@ Min Votes:
 
 <br><br>
 
-<strong>Display Columns</strong><br>
+<strong>Display Columns</strong><br><br>
 
-<label><input type="checkbox" name="show_career_games" {% if visible.career_games %}checked{% endif %}> Career Games</label>
-<label><input type="checkbox" name="show_career_goals" {% if visible.career_goals %}checked{% endif %}> Career Goals</label>
-<label><input type="checkbox" name="show_max_goals_game" {% if visible.max_goals_game %}checked{% endif %}> Max Goals (Game)</label>
-<label><input type="checkbox" name="show_max_goals_season" {% if visible.max_goals_season %}checked{% endif %}> Max Goals (Season)</label>
-<label><input type="checkbox" name="show_max_goals_season_year" {% if visible.max_goals_season_year %}checked{% endif %}> Season Year</label>
-<label><input type="checkbox" name="show_max_disposals" {% if visible.max_disposals_game %}checked{% endif %}> Max Disposals</label>
-<label><input type="checkbox" name="show_max_kicks" {% if visible.max_kicks_game %}checked{% endif %}> Max Kicks</label>
+<details>
+<summary>Career Totals</summary>
+<div class="group">
+    <label><input type="checkbox" name="show_career_games" {% if visible.career_games %}checked{% endif %}> Games</label>
+    <label><input type="checkbox" name="show_career_goals" {% if visible.career_goals %}checked{% endif %}> Goals</label>
+</div>
+</details>
 
-<!-- ✅ ADDITIVE -->
-<label><input type="checkbox" name="show_max_marks_game" {% if visible.max_marks_game %}checked{% endif %}> Max Marks</label>
-<label><input type="checkbox" name="show_max_hitouts_game" {% if visible.max_hitouts_game %}checked{% endif %}> Max Hitouts</label>
-<label><input type="checkbox" name="show_max_tackles_game" {% if visible.max_tackles_game %}checked{% endif %}> Max Tackles</label>
+<details>
+<summary>Single Game Peaks</summary>
+<div class="group">
+    <label><input type="checkbox" name="show_max_goals_game" {% if visible.max_goals_game %}checked{% endif %}> Goals</label>
+    <label><input type="checkbox" name="show_max_disposals_game" {% if visible.max_disposals_game %}checked{% endif %}> Disposals</label>
+    <label><input type="checkbox" name="show_max_kicks_game" {% if visible.max_kicks_game %}checked{% endif %}> Kicks</label>
+    <label><input type="checkbox" name="show_max_marks_game" {% if visible.max_marks_game %}checked{% endif %}> Marks</label>
+    <label><input type="checkbox" name="show_max_hitouts_game" {% if visible.max_hitouts_game %}checked{% endif %}> Hitouts</label>
+    <label><input type="checkbox" name="show_max_tackles_game" {% if visible.max_tackles_game %}checked{% endif %}> Tackles</label>
+</div>
+</details>
 
-<label><input type="checkbox" name="show_all_aus" {% if visible.all_aus %}checked{% endif %}> All-Australian Count</label>
-<label><input type="checkbox" name="show_all_aus_years" {% if visible.all_aus_years %}checked{% endif %}> AA Years</label>
-<label><input type="checkbox" name="show_aa_draft_pick" {% if visible.aa_draft_pick %}checked{% endif %}> AA Draft Pick</label>
+<details>
+<summary>Season Peaks</summary>
+<div class="group">
+    <label><input type="checkbox" name="show_max_goals_season" {% if visible.max_goals_season %}checked{% endif %}> Goals</label>
+    <label><input type="checkbox" name="show_max_goals_season_year" {% if visible.max_goals_season_year %}checked{% endif %}> Best Year for Goals</label>
+</div>
+</details>
 
-<label><input type="checkbox" name="show_rs_noms" {% if visible.rs_noms %}checked{% endif %}> Rising Star Noms</label>
+<details>
+<summary>Awards & Honours</summary>
+<div class="group">
+    <label><input type="checkbox" name="show_all_aus" {% if visible.all_aus %}checked{% endif %}> All-Australian Count</label>
+    <label><input type="checkbox" name="show_all_aus_years" {% if visible.all_aus_years %}checked{% endif %}> AA Years</label>
+    <label><input type="checkbox" name="show_aa_draft_pick" {% if visible.aa_draft_pick %}checked{% endif %}> AA Draft Pick</label>
+    <label><input type="checkbox" name="show_rs_noms" {% if visible.rs_noms %}checked{% endif %}> Rising Star Noms</label>
+    <label><input type="checkbox" name="show_wins" {% if visible.brownlow_wins %}checked{% endif %}> Brownlow Wins</label>
+    <label><input type="checkbox" name="show_votes" {% if visible.brownlow_votes %}checked{% endif %}> Brownlow Votes</label>
+</div>
+</details>
 
-<label><input type="checkbox" name="show_wins" {% if visible.brownlow_wins %}checked{% endif %}> Brownlow Wins</label>
-<label><input type="checkbox" name="show_votes" {% if visible.brownlow_votes %}checked{% endif %}> Brownlow Votes</label>
-<label><input type="checkbox" name="show_gf_apps" {% if visible.gf_appearances %}checked{% endif %}> GF Apps</label>
-<label><input type="checkbox" name="show_gf_wins" {% if visible.gf_wins %}checked{% endif %}> GF Wins</label>
-<label><input type="checkbox" name="show_height" {% if visible.height %}checked{% endif %}> Height</label>
-<label><input type="checkbox" name="show_years" {% if visible.years %}checked{% endif %}> Years Played</label>
-<label><input type="checkbox" name="show_club_stats" {% if visible.club_stats %}checked{% endif %}> Club Breakdown</label>
+<details>
+<summary>Physical & Career Span</summary>
+<div class="group">
+    <label><input type="checkbox" name="show_height" {% if visible.height %}checked{% endif %}> Height</label>
+    <label><input type="checkbox" name="show_years" {% if visible.years %}checked{% endif %}> Years Played</label>
+</div>
+</details>
 
-<br><br>
+<details>
+<summary>Extra Views</summary>
+<div class="group">
+    <label><input type="checkbox" name="show_gf_apps" {% if visible.gf_apps %}checked{% endif %}> GF Record</label>
+    <label><input type="checkbox" name="show_gf_wins" {% if visible.gf_wins %}checked{% endif %}> GF Wins</label>
+    <label><input type="checkbox" name="show_club_stats" {% if visible.club_stats %}checked{% endif %}> Club Breakdown</label>
+</div>
+</details>
 
 <button type="submit">Search</button>
 
@@ -232,7 +260,7 @@ Min Votes:
     {% if visible.career_goals %}<th>Goals</th>{% endif %}
     {% if visible.max_goals_game %}<th>Max G (Game)</th>{% endif %}
     {% if visible.max_goals_season %}<th>Max G (Season)</th>{% endif %}
-    {% if visible.max_goals_season_year %}<th>Season</th>{% endif %}
+    {% if visible.max_goals_season_year %}<th>Max G (Season Year)</th>{% endif %}
     {% if visible.max_disposals_game %}<th>Max D</th>{% endif %}
     {% if visible.max_kicks_game %}<th>Max K</th>{% endif %}
 
@@ -247,7 +275,7 @@ Min Votes:
     {% if visible.rs_noms %}<th>RS</th>{% endif %}
     {% if visible.brownlow_wins %}<th>BL Wins</th>{% endif %}
     {% if visible.brownlow_votes %}<th>BL Votes</th>{% endif %}
-    {% if visible.gf_appearances %}<th>GF Apps</th>{% endif %}
+    {% if visible.gf_apps %}<th>GF (W-D-L)</th>{% endif %}
     {% if visible.gf_wins %}<th>GF Wins</th>{% endif %}
     {% if visible.height %}<th>Height</th>{% endif %}
     {% if visible.years %}<th>Years</th>{% endif %}
@@ -293,7 +321,12 @@ Min Votes:
     {% endif %}
     {% if visible.brownlow_wins %}<td>{{ p['brownlow_wins'] }}</td>{% endif %}
     {% if visible.brownlow_votes %}<td>{{ p['brownlow_votes'] }}</td>{% endif %}
-    {% if visible.gf_appearances %}<td>{{ p['gf_appearances'] or 0 }}</td>{% endif %}
+    {% if visible.gf_apps %}
+    <td title="Wins-Draws-Losses">
+        {{ p['gf_wins'] or 0 }}-{{ p['gf_draws'] or 0 }}-{{ p['gf_losses'] or 0 }}
+    </td>
+    {% endif %}
+
     {% if visible.gf_wins %}<td>{{ p['gf_wins'] or 0 }}</td>{% endif %}
     {% if visible.height %}<td>{{ p['height'] or '' }}</td>{% endif %}
     {% if visible.years %}<td>{{ p['first_year'] }} - {{ p['last_year'] }}</td>{% endif %}
