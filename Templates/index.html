@@ -121,9 +121,6 @@ Max Tackles:
 Min Selections:
 <input type="number" name="min_all_aus" value="{{ filters.min_all_aus or '' }}">
 
-Max Draft Pick (AA):
-<input type="number" name="max_aa_draft_pick" value="{{ filters.max_aa_draft_pick or '' }}">
-
 <br><br>
 
 <strong>Rising Star</strong><br>
@@ -142,8 +139,6 @@ Max Height:
 <input type="number" name="max_height" value="{{ filters.max_height or '' }}">
 
 <br><br>
-
-
 
 <strong>Career Years</strong><br>
 
@@ -176,6 +171,7 @@ Min Votes:
     <option value="brownlow_votes">Brownlow Votes</option>
     <option value="brownlow_wins">Brownlow Wins</option>
     <option value="gf_wins">GF Wins</option>
+    <option value="bnf_count">Best & Fairest Wins</option>
     <option value="first_year">First Year</option>
     <option value="last_year">Last Year</option>
 </select>
@@ -222,10 +218,16 @@ Min Votes:
 <div class="group">
     <label><input type="checkbox" name="show_all_aus" {% if visible.all_aus %}checked{% endif %}> All-Australian Count</label>
     <label><input type="checkbox" name="show_all_aus_years" {% if visible.all_aus_years %}checked{% endif %}> AA Years</label>
-    <label><input type="checkbox" name="show_aa_draft_pick" {% if visible.aa_draft_pick %}checked{% endif %}> AA Draft Pick</label>
+
+    <!-- ✅ MERGED DRAFT PICK -->
+    <label><input type="checkbox" name="show_draft_pick" {% if visible.draft_pick %}checked{% endif %}> Draft Pick</label>
+
     <label><input type="checkbox" name="show_rs_noms" {% if visible.rs_noms %}checked{% endif %}> Rising Star Noms</label>
     <label><input type="checkbox" name="show_wins" {% if visible.brownlow_wins %}checked{% endif %}> Brownlow Wins</label>
     <label><input type="checkbox" name="show_votes" {% if visible.brownlow_votes %}checked{% endif %}> Brownlow Votes</label>
+
+    <label><input type="checkbox" name="show_bnf_count" {% if visible.bnf_count %}checked{% endif %}> Best & Fairest Wins</label>
+    <label><input type="checkbox" name="show_bnf_years" {% if visible.bnf_years %}checked{% endif %}> B&F Years</label>
 </div>
 </details>
 
@@ -263,18 +265,18 @@ Min Votes:
     {% if visible.max_goals_season_year %}<th>Max G (Season Year)</th>{% endif %}
     {% if visible.max_disposals_game %}<th>Max D</th>{% endif %}
     {% if visible.max_kicks_game %}<th>Max K</th>{% endif %}
-
-    <!-- ✅ ADDITIVE -->
     {% if visible.max_marks_game %}<th>Max M</th>{% endif %}
     {% if visible.max_hitouts_game %}<th>Max HO</th>{% endif %}
     {% if visible.max_tackles_game %}<th>Max T</th>{% endif %}
 
     {% if visible.all_aus %}<th>AA</th>{% endif %}
     {% if visible.all_aus_years %}<th>AA Years</th>{% endif %}
-    {% if visible.aa_draft_pick %}<th>AA Draft</th>{% endif %}
+    {% if visible.draft_pick %}<th>Draft Pick</th>{% endif %}
     {% if visible.rs_noms %}<th>RS</th>{% endif %}
     {% if visible.brownlow_wins %}<th>BL Wins</th>{% endif %}
     {% if visible.brownlow_votes %}<th>BL Votes</th>{% endif %}
+    {% if visible.bnf_count %}<th>B&F</th>{% endif %}
+    {% if visible.bnf_years %}<th>B&F Years</th>{% endif %}
     {% if visible.gf_apps %}<th>GF (W-D-L)</th>{% endif %}
     {% if visible.gf_wins %}<th>GF Wins</th>{% endif %}
     {% if visible.height %}<th>Height</th>{% endif %}
@@ -294,39 +296,43 @@ Min Votes:
     {% if visible.max_goals_season_year %}<td>{{ p['max_goals_season_year'] }}</td>{% endif %}
     {% if visible.max_disposals_game %}<td>{{ p['max_disposals_game'] }}</td>{% endif %}
     {% if visible.max_kicks_game %}<td>{{ p['max_kicks_game'] }}</td>{% endif %}
-
-    <!-- ✅ ADDITIVE -->
     {% if visible.max_marks_game %}<td>{{ p['max_marks_game'] or 0 }}</td>{% endif %}
     {% if visible.max_hitouts_game %}<td>{{ p['max_hitouts_game'] or 0 }}</td>{% endif %}
     {% if visible.max_tackles_game %}<td>{{ p['max_tackles_game'] or 0 }}</td>{% endif %}
 
     {% if visible.all_aus %}<td>{{ p['all_aus_count'] or 0 }}</td>{% endif %}
     {% if visible.all_aus_years %}
-        <td class="aa-years">
-            {% for y in aa_years.get(p['player_id'], []) %}
-                {{ y }}{% if not loop.last %}, {% endif %}
-            {% endfor %}
-        </td>
-    {% endif %}
-    {% if visible.aa_draft_pick %}
-        <td class="draft-pick">
-            {% set dp = best_aa_draft.get(p['player_id']) %}
-            {% if dp %}{{ dp.display }}{% else %}—{% endif %}
-        </td>
-    {% endif %}
-    {% if visible.rs_noms %}
-        <td class="rs">
-            {{ rs_counts.get(p['player_id'], 0) }}
-        </td>
-    {% endif %}
-    {% if visible.brownlow_wins %}<td>{{ p['brownlow_wins'] }}</td>{% endif %}
-    {% if visible.brownlow_votes %}<td>{{ p['brownlow_votes'] }}</td>{% endif %}
-    {% if visible.gf_apps %}
-    <td title="Wins-Draws-Losses">
-        {{ p['gf_wins'] or 0 }}-{{ p['gf_draws'] or 0 }}-{{ p['gf_losses'] or 0 }}
+    <td class="aa-years">
+        {% for y in aa_years.get(p['player_id'], []) %}
+            {{ y }}{% if not loop.last %}, {% endif %}
+        {% endfor %}
     </td>
     {% endif %}
 
+    {% if visible.draft_pick %}
+    <td class="draft-pick">
+        {% set dp = unified_draft.get(p['player_id']) %}
+        {% if dp %}{{ dp.display }}{% else %}—{% endif %}
+    </td>
+    {% endif %}
+
+    {% if visible.rs_noms %}
+    <td class="rs">{{ rs_counts.get(p['player_id'], 0) }}</td>
+    {% endif %}
+    {% if visible.brownlow_wins %}<td>{{ p['brownlow_wins'] }}</td>{% endif %}
+    {% if visible.brownlow_votes %}<td>{{ p['brownlow_votes'] }}</td>{% endif %}
+    {% if visible.bnf_count %}<td>{{ p['bnf_count'] or 0 }}</td>{% endif %}
+    {% if visible.bnf_years %}
+    <td class="aa-years">
+        {% for yr, club in bnf_years.get(p['player_id'], []) %}
+            {{ yr }} ({{ club }}){% if not loop.last %}, {% endif %}
+        {% endfor %}
+    </td>
+    {% endif %}
+
+    {% if visible.gf_apps %}
+    <td>{{ p['gf_wins'] or 0 }}-{{ p['gf_draws'] or 0 }}-{{ p['gf_losses'] or 0 }}</td>
+    {% endif %}
     {% if visible.gf_wins %}<td>{{ p['gf_wins'] or 0 }}</td>{% endif %}
     {% if visible.height %}<td>{{ p['height'] or '' }}</td>{% endif %}
     {% if visible.years %}<td>{{ p['first_year'] }} - {{ p['last_year'] }}</td>{% endif %}
