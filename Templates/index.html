@@ -287,7 +287,7 @@ Min Votes:
 {% for p in players %}
 <tr>
     <td><a href="{{ p['player_id'] }}" target="_blank">{{ p['name'] }}</a></td>
-    <td>{{ p['teams'] }}</td>
+    <td>{{ get_player_teams(p['player_id']) }}</td>
 
     {% if visible.career_games %}<td>{{ p['career_games'] }}</td>{% endif %}
     {% if visible.career_goals %}<td>{{ p['career_goals'] }}</td>{% endif %}

@@ -86,6 +86,24 @@ def get_player_club_stats(player_id):
     conn.close()
     return rows
 
+
+# -------------------------------------------------
+# ✅ NEW: DERIVE TEAMS FROM player_seasons (DISPLAY ONLY)
+# -------------------------------------------------
+
+def get_player_teams(player_id):
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("""
+        SELECT DISTINCT team
+        FROM player_seasons
+        WHERE player_id = ?
+        ORDER BY team
+    """, (player_id,))
+    teams = [r[0] for r in c.fetchall()]
+    conn.close()
+    return ", ".join(teams)
+
 # -------------------------------------------------
 # ALL AUSTRALIAN
 # -------------------------------------------------
@@ -143,14 +161,10 @@ def get_rs_counts():
     return rs
 
 # -------------------------------------------------
-# BEST & FAIREST (FIXED)
+# BEST & FAIREST
 # -------------------------------------------------
 
 def get_bnf_years_map():
-    """
-    De-duplicate B&F by (year, club),
-    preferring any Wikipedia-derived award.
-    """
     conn = get_db()
     c = conn.cursor()
 
@@ -225,7 +239,7 @@ def normalise_draft_pick(raw):
     return (raw, None)
 
 # -------------------------------------------------
-# UNIFIED DRAFT PICK (AA + BNF)
+# UNIFIED DRAFT PICK
 # -------------------------------------------------
 
 def get_unified_draft_picks():
@@ -242,6 +256,10 @@ def get_unified_draft_picks():
             unified[pid] = dp
 
     return unified
+
+# -------------------------------------------------
+# QUERY
+# -------------------------------------------------
 
 def query_players(filters):
 
@@ -371,9 +389,8 @@ def index():
 
     players = query_players(filters)
 
-# expand players to include anyone with B&Fs
+    # expand players to include anyone with B&Fs
     bnf_players = set(get_bnf_years_map().keys())
-
     players = [
         p for p in players
         if p["player_id"] in bnf_players or not filters.get("team1")
@@ -390,7 +407,8 @@ def index():
         rs_counts=get_rs_counts(),
         bnf_years=get_bnf_years_map(),
         unified_draft=get_unified_draft_picks(),
-        get_player_club_stats=get_player_club_stats
+        get_player_club_stats=get_player_club_stats,
+        get_player_teams=get_player_teams,   # ✅ NEW
     )
 
 if __name__ == "__main__":
