@@ -143,20 +143,38 @@ def get_rs_counts():
     return rs
 
 # -------------------------------------------------
-# BEST & FAIREST
+# BEST & FAIREST (FIXED)
 # -------------------------------------------------
 
 def get_bnf_years_map():
+    """
+    De-duplicate B&F by (year, club),
+    preferring any Wikipedia-derived award.
+    """
     conn = get_db()
     c = conn.cursor()
+
     c.execute("""
-        SELECT player_id, year, club
+        SELECT player_id, year, club, source
         FROM best_and_fairest
-        ORDER BY year DESC
+        ORDER BY
+            year DESC,
+            CASE
+                WHEN source LIKE 'wikipedia%' THEN 0
+                ELSE 1
+            END
     """)
+
+    seen = set()
     bnf = {}
-    for pid, yr, club in c.fetchall():
+
+    for pid, yr, club, source in c.fetchall():
+        key = (yr, club)
+        if key in seen:
+            continue
+        seen.add(key)
         bnf.setdefault(pid, []).append((yr, club))
+
     conn.close()
     return bnf
 
@@ -258,31 +276,6 @@ def query_players(filters):
         """
         p.append(filters["teammate_of"])
 
-    numeric_filters = [
-        ("career_games", "min_games", ">="),
-        ("career_games", "max_games", "<="),
-        ("career_goals", "min_goals", ">="),
-        ("career_goals", "max_goals", "<="),
-        ("max_goals_game", "min_max_goals_game", ">="),
-        ("max_goals_season", "min_max_goals_season", ">="),
-        ("max_marks_game", "min_max_marks_game", ">="),
-        ("max_marks_game", "max_max_marks_game", "<="),
-        ("max_hitouts_game", "min_max_hitouts_game", ">="),
-        ("max_hitouts_game", "max_max_hitouts_game", "<="),
-        ("max_tackles_game", "min_max_tackles_game", ">="),
-        ("max_tackles_game", "max_max_tackles_game", "<="),
-        ("height", "min_height", ">="),
-        ("height", "max_height", "<="),
-        ("first_year", "min_first_year", ">="),
-        ("last_year", "min_last_year", ">="),
-        ("all_aus_count", "min_all_aus", ">="),
-    ]
-
-    for col, key, op in numeric_filters:
-        if filters.get(key):
-            q += " AND %s %s ?" % (col, op)
-            p.append(filters[key])
-
     sort_col = filters.get("sort_by") or "career_games"
     sort_dir = filters.get("sort_order") or "DESC"
     q += " ORDER BY %s %s" % (sort_col, sort_dir)
@@ -311,6 +304,14 @@ def index():
             filters[k] = val
 
     players = query_players(filters)
+
+# expand players to include anyone with B&Fs
+    bnf_players = set(get_bnf_years_map().keys())
+
+    players = [
+        p for p in players
+        if p["player_id"] in bnf_players or not filters.get("team1")
+    ]
 
     return render_template(
         "index.html",
