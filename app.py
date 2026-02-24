@@ -243,29 +243,26 @@ def get_unified_draft_picks():
 
     return unified
 
-# -------------------------------------------------
-# MAIN QUERY
-# -------------------------------------------------
-
 def query_players(filters):
+
     conn = get_db()
     c = conn.cursor()
 
-    q = "SELECT * FROM players WHERE 1=1"
-    p = []
+    query = "SELECT * FROM players WHERE 1=1"
+    params = []
 
     if filters.get("team1"):
-        q += " AND (',' || REPLACE(teams,' ','') || ',') LIKE ?"
-        p.append("%," + filters["team1"] + ",%")
+        query += " AND (',' || REPLACE(teams, ' ', '') || ',') LIKE ?"
+        params.append("%," + filters["team1"] + ",%")
 
     if filters.get("team2"):
-        q += " AND (',' || REPLACE(teams,' ','') || ',') LIKE ?"
-        p.append("%," + filters["team2"] + ",%")
+        query += " AND (',' || REPLACE(teams, ' ', '') || ',') LIKE ?"
+        params.append("%," + filters["team2"] + ",%")
 
     if filters.get("teammate_of"):
-        q += """
+        query += """
         AND player_id IN (
-            SELECT ps2.player_id
+            SELECT DISTINCT ps2.player_id
             FROM player_seasons ps1
             JOIN player_seasons ps2
               ON ps1.year = ps2.year
@@ -274,13 +271,82 @@ def query_players(filters):
               AND ps2.player_id != ps1.player_id
         )
         """
-        p.append(filters["teammate_of"])
+        params.append(filters["teammate_of"])
 
-    sort_col = filters.get("sort_by") or "career_games"
-    sort_dir = filters.get("sort_order") or "DESC"
-    q += " ORDER BY %s %s" % (sort_col, sort_dir)
+    if filters.get("min_games"):
+        query += " AND career_games >= ?"
+        params.append(filters["min_games"])
 
-    c.execute(q, p)
+    if filters.get("max_games"):
+        query += " AND career_games <= ?"
+        params.append(filters["max_games"])
+
+    if filters.get("min_goals"):
+        query += " AND career_goals >= ?"
+        params.append(filters["min_goals"])
+
+    if filters.get("max_goals"):
+        query += " AND career_goals <= ?"
+        params.append(filters["max_goals"])
+
+    if filters.get("min_max_goals_game"):
+        query += " AND max_goals_game >= ?"
+        params.append(filters["min_max_goals_game"])
+
+    if filters.get("min_max_goals_season"):
+        query += " AND max_goals_season >= ?"
+        params.append(filters["min_max_goals_season"])
+
+    if filters.get("min_max_marks_game"):
+        query += " AND max_marks_game >= ?"
+        params.append(filters["min_max_marks_game"])
+
+    if filters.get("max_max_marks_game"):
+        query += " AND max_marks_game <= ?"
+        params.append(filters["max_max_marks_game"])
+
+    if filters.get("min_max_hitouts_game"):
+        query += " AND max_hitouts_game >= ?"
+        params.append(filters["min_max_hitouts_game"])
+
+    if filters.get("max_max_hitouts_game"):
+        query += " AND max_hitouts_game <= ?"
+        params.append(filters["max_max_hitouts_game"])
+
+    if filters.get("min_max_tackles_game"):
+        query += " AND max_tackles_game >= ?"
+        params.append(filters["min_max_tackles_game"])
+
+    if filters.get("max_max_tackles_game"):
+        query += " AND max_tackles_game <= ?"
+        params.append(filters["max_max_tackles_game"])
+
+    if filters.get("min_all_aus"):
+        query += " AND all_aus_count >= ?"
+        params.append(filters["min_all_aus"])
+
+    if filters.get("min_height"):
+        query += " AND height >= ?"
+        params.append(filters["min_height"])
+
+    if filters.get("max_height"):
+        query += " AND height <= ?"
+        params.append(filters["max_height"])
+
+    if filters.get("min_first_year"):
+        query += " AND first_year >= ?"
+        params.append(filters["min_first_year"])
+
+    if filters.get("min_last_year"):
+        query += " AND last_year >= ?"
+        params.append(filters["min_last_year"])
+
+    sort_column = filters.get("sort_by") or "career_games"
+    sort_order = filters.get("sort_order") or "DESC"
+
+    query += " ORDER BY %s %s" % (sort_column, sort_order)
+
+    c.execute(query, params)
     rows = c.fetchall()
     conn.close()
     return rows
