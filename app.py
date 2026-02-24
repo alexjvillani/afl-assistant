@@ -389,13 +389,6 @@ def index():
 
     players = query_players(filters)
 
-    # expand players to include anyone with B&Fs
-    bnf_players = set(get_bnf_years_map().keys())
-    players = [
-        p for p in players
-        if p["player_id"] in bnf_players or not filters.get("team1")
-    ]
-
     return render_template(
         "index.html",
         players=players,
