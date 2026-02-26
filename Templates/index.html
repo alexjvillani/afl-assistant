@@ -123,6 +123,16 @@ Min Selections:
 
 <br><br>
 
+<strong>Coleman Medal (H&amp;A)</strong><br>
+
+Min Wins:
+<input type="number" name="min_gk_wins" value="{{ filters.min_gk_wins or '' }}">
+
+Min Goals:
+<input type="number" name="min_gk_goals" value="{{ filters.min_gk_goals or '' }}">
+
+<br><br>
+
 <strong>Rising Star</strong><br>
 
 Min Nominations:
@@ -172,6 +182,8 @@ Min Votes:
     <option value="brownlow_wins">Brownlow Wins</option>
     <option value="gf_wins">GF Wins</option>
     <option value="bnf_count">Best & Fairest Wins</option>
+	<option value="leading_gk_wins">Coleman Wins</option>
+	<option value="leading_gk_goals">Coleman Goals (H&amp;A)</option>
     <option value="first_year">First Year</option>
     <option value="last_year">Last Year</option>
 </select>
@@ -228,6 +240,7 @@ Min Votes:
 
     <label><input type="checkbox" name="show_bnf_count" {% if visible.bnf_count %}checked{% endif %}> Best & Fairest Wins</label>
     <label><input type="checkbox" name="show_bnf_years" {% if visible.bnf_years %}checked{% endif %}> B&F Years</label>
+	<label><input type="checkbox" name="show_leading_gk"{% if visible.leading_gk %}checked{% endif %}>Coleman (H&amp;A)</label>
 </div>
 </details>
 
@@ -268,7 +281,7 @@ Min Votes:
     {% if visible.max_marks_game %}<th>Max M</th>{% endif %}
     {% if visible.max_hitouts_game %}<th>Max HO</th>{% endif %}
     {% if visible.max_tackles_game %}<th>Max T</th>{% endif %}
-
+	{% if visible.leading_gk %}<th>Coleman</th>{% endif %}
     {% if visible.all_aus %}<th>AA</th>{% endif %}
     {% if visible.all_aus_years %}<th>AA Years</th>{% endif %}
     {% if visible.draft_pick %}<th>Draft Pick</th>{% endif %}
@@ -329,6 +342,15 @@ Min Votes:
         {% endfor %}
     </td>
     {% endif %}
+	{% if visible.leading_gk %}
+	<td>
+		{% if p['leading_gk_wins'] > 0 %}
+			{{ p['leading_gk_wins'] }}
+		{% else %}
+			—
+		{% endif %}
+	</td>
+	{% endif %}
 
     {% if visible.gf_apps %}
     <td>{{ p['gf_wins'] or 0 }}-{{ p['gf_draws'] or 0 }}-{{ p['gf_losses'] or 0 }}</td>

@@ -256,6 +256,37 @@ def get_unified_draft_picks():
             unified[pid] = dp
 
     return unified
+    
+# -------------------------------------------------
+# SCHEMA SAFETY — COLEMAN
+# -------------------------------------------------
+
+def ensure_coleman_columns():
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+
+    c.execute("PRAGMA table_info(players)")
+    existing = set([row[1] for row in c.fetchall()])
+
+    columns = [
+        ("leading_gk_wins", "INTEGER"),
+        ("leading_gk_goals", "INTEGER"),
+    ]
+
+    for col, coltype in columns:
+        if col not in existing:
+            try:
+                c.execute(
+                    "ALTER TABLE players ADD COLUMN %s %s DEFAULT 0"
+                    % (col, coltype)
+                )
+            except:
+                pass
+
+    conn.commit()
+    conn.close()
+
+ensure_coleman_columns()
 
 # -------------------------------------------------
 # QUERY
@@ -350,6 +381,14 @@ def query_players(filters):
     if filters.get("max_height"):
         query += " AND height <= ?"
         params.append(filters["max_height"])
+        
+    if filters.get("min_gk_wins"):
+        query += " AND leading_gk_wins >= ?"
+        params.append(filters["min_gk_wins"])
+
+    if filters.get("min_gk_goals"):
+        query += " AND leading_gk_goals >= ?"
+        params.append(filters["min_gk_goals"])
 
     if filters.get("min_first_year"):
         query += " AND first_year >= ?"
