@@ -427,10 +427,12 @@ def index():
             filters[k] = val
 
     players = query_players(filters)
+    total_results = len(players)
 
     return render_template(
         "index.html",
         players=players,
+        total_results=total_results,
         teams=TEAM_OPTIONS,
         filters=filters,
         visible=visible,
