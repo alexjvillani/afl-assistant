@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gridley — Niche Zone</title>
+
+    <style>
+        body {
+            font-family: "Comic Sans MS", Arial;
+            background: repeating-linear-gradient(
+                45deg,
+                #f4f4f4,
+                #f4f4f4 10px,
+                #eaeaea 10px,
+                #eaeaea 20px
+            );
+            padding:20px;
+        }
+
+        h1 {
+            text-align:center;
+            font-size:36px;
+            text-shadow: 2px 2px #bbb;
+        }
+
+        .nav {
+            text-align:center;
+            margin-bottom:20px;
+        }
+
+        .nav a {
+            text-decoration:none;
+            padding:8px 14px;
+            margin:0 6px;
+            background:#222;
+            color:white;
+            border-radius:20px;
+            font-weight:bold;
+        }
+
+        .controls {
+            background:white;
+            padding:15px;
+            margin-bottom:20px;
+            border:2px dashed #999;
+            text-align:center;
+        }
+
+        table {
+            width:100%;
+            border-collapse: collapse;
+            background:white;
+            box-shadow:0 0 15px rgba(0,0,0,0.2);
+        }
+
+        th {
+            background:#111;
+            color:white;
+            padding:10px;
+        }
+
+        td {
+            padding:8px;
+            border-bottom:1px solid #ddd;
+        }
+
+        tr:nth-child(even) { background:#f9f9f9; }
+        tr:hover { background:#fff3cd; }
+
+        .rank {
+            font-weight:bold;
+            text-align:center;
+        }
+
+        .stat {
+            font-weight:bold;
+            color:#b30000;
+        }
+
+        footer {
+            margin-top:30px;
+            text-align:center;
+            font-size:11px;
+            color:#666;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="nav">
+    <a href="/">🏉 Main Gridley</a>
+    <a href="/niche">🧠 Niche Zone</a>
+</div>
+
+<h1>🧠 GRIDLEY: SEASON TOP 10s</h1>
+
+<div class="controls">
+<form method="get">
+
+Season:
+<input type="number" name="year" value="{{ year }}" min="1965">
+
+Stat:
+<select name="stat">
+    <option value="goals" {% if stat == "goals" %}selected{% endif %}>Goals</option>
+    <option value="disposals" {% if stat == "disposals" %}selected{% endif %}>Disposals</option>
+    <option value="kicks" {% if stat == "kicks" %}selected{% endif %}>Kicks</option>
+    <option value="marks" {% if stat == "marks" %}selected{% endif %}>Marks</option>
+    <option value="hitouts" {% if stat == "hitouts" %}selected{% endif %}>Hitouts</option>
+    <option value="tackles" {% if stat == "tackles" %}selected{% endif %}>Tackles</option>
+</select>
+
+<button type="submit">Show Me The Freaks</button>
+
+</form>
+</div>
+
+<div style="margin-bottom:10px;">
+    Total results: <strong>{{ total_results }}</strong>
+</div>
+
+<table>
+<tr>
+    <th>#</th>
+    <th>Player</th>
+    <th>{{ stat|title }}</th>
+</tr>
+
+{% for row in top10 %}
+<tr>
+    <td class="rank">{{ loop.index }}</td>
+    <td>
+        <a href="{{ row['player_id'] }}" target="_blank">
+            {{ row['name'] }}
+        </a>
+    </td>
+    <td class="stat">{{ row['value'] }}</td>
+</tr>
+{% endfor %}
+</table>
+
+<footer>
+    Only seasons from 1965 onwards are supported.<br>
+    Built for arguments that start with “yeah but…”
+</footer>
+
+</body>
+</html>

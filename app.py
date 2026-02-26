@@ -288,6 +288,47 @@ def ensure_coleman_columns():
 
 ensure_coleman_columns()
 
+
+# -------------------------------------------------
+# NICHE: TOP 10 SEASON LEADERS
+# -------------------------------------------------
+
+def get_top10_season(year, stat):
+    conn = get_db()
+    c = conn.cursor()
+
+    stat_map = {
+        "goals": "COALESCE(ps.goals, 0)",
+        "kicks": "COALESCE(ps.kicks, 0)",
+        "handballs": "COALESCE(ps.handballs, 0)",
+        "marks": "COALESCE(ps.marks, 0)",
+        "disposals": "(COALESCE(ps.kicks,0) + COALESCE(ps.handballs,0))"
+    }
+
+    if stat not in stat_map:
+        return []
+
+    expr = stat_map[stat]
+
+    query = """
+        SELECT
+            ps.player_id,
+            p.name,
+            ps.team,
+            %s AS value
+        FROM player_seasons ps
+        JOIN players p ON p.player_id = ps.player_id
+        WHERE ps.year = ?
+          AND %s > 0
+        ORDER BY value DESC
+        LIMIT 10
+    """ % (expr, expr)
+
+    c.execute(query, (year,))
+    rows = c.fetchall()
+    conn.close()
+    return rows
+
 # -------------------------------------------------
 # QUERY
 # -------------------------------------------------
@@ -337,6 +378,15 @@ def query_players(filters):
     if filters.get("max_goals"):
         query += " AND career_goals <= ?"
         params.append(filters["max_goals"])
+        
+            # --- Max Disposals (Game) ---
+    if filters.get("min_max_disposals_game"):
+        query += " AND max_disposals_game >= ?"
+        params.append(filters["min_max_disposals_game"])
+
+    if filters.get("max_max_disposals_game"):
+        query += " AND max_disposals_game <= ?"
+        params.append(filters["max_max_disposals_game"])
 
     if filters.get("min_max_goals_game"):
         query += " AND max_goals_game >= ?"
@@ -443,6 +493,24 @@ def index():
         unified_draft=get_unified_draft_picks(),
         get_player_club_stats=get_player_club_stats,
         get_player_teams=get_player_teams,   # ✅ NEW
+    )
+# -------------------------------------------------
+# NICHE ROUTE — SEASON TOP 10s
+# -------------------------------------------------
+
+@app.route("/niche")
+def niche():
+    year = int(request.args.get("year", 2024))
+    stat = request.args.get("stat", "goals")
+
+    top10 = get_top10_season(year, stat)
+
+    return render_template(
+        "niche.html",
+        year=year,
+        stat=stat,
+        top10=top10,
+        total_results=len(top10)
     )
 
 if __name__ == "__main__":
