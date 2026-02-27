@@ -264,6 +264,8 @@ Min Votes:
 	<label><input type="checkbox" name="show_leading_gk"{% if visible.leading_gk %}checked{% endif %}>Coleman (H&amp;A)</label>
 	<label><input type="checkbox" name="show_wooden_spoons"{% if visible.wooden_spoons %}checked{% endif %}>Wooden Spoons</label>
 	<label><input type="checkbox" name="show_wooden_spoon_years"{% if visible.wooden_spoon_years %}checked{% endif %}>Wooden Spoon Years</label>
+	<label><input type="checkbox" name="show_22u22"{% if visible['22u22'] %}checked{% endif %}>22 Under 22</label>
+	<label><input type="checkbox" name="show_22u22_years"{% if visible['22u22_years'] %}checked{% endif %}>22u22 Years</label>
 </div>
 </details>
 
@@ -308,11 +310,19 @@ Min Votes:
     {% if visible.max_marks_game %}<th>Max M</th>{% endif %}
     {% if visible.max_hitouts_game %}<th>Max HO</th>{% endif %}
     {% if visible.max_tackles_game %}<th>Max T</th>{% endif %}
-	{% if visible.leading_gk %}<th>Coleman</th>{% endif %}
-	{% if visible.wooden_spoons %}<th>Wooden Spoon</th>{% endif %}
-	{% if visible.wooden_spoon_years %}<th>Wooden Spoon Years</th>{% endif %}
+
+    {% if visible.leading_gk %}<th>Coleman</th>{% endif %}
+
+    {# ✅ Wooden Spoon MUST come BEFORE AA/22u22 in BOTH header + row #}
+    {% if visible.wooden_spoons %}<th>Wooden Spoon</th>{% endif %}
+    {% if visible.wooden_spoon_years %}<th>Wooden Spoon Years</th>{% endif %}
+
     {% if visible.all_aus %}<th>AA</th>{% endif %}
     {% if visible.all_aus_years %}<th>AA Years</th>{% endif %}
+
+    {% if visible['22u22'] %}<th>22u22</th>{% endif %}
+    {% if visible['22u22_years'] %}<th>22u22 Years</th>{% endif %}
+
     {% if visible.draft_pick %}<th>Draft Pick</th>{% endif %}
     {% if visible.rs_noms %}<th>RS</th>{% endif %}
     {% if visible.brownlow_wins %}<th>BL Wins</th>{% endif %}
@@ -342,64 +352,80 @@ Min Votes:
     {% if visible.max_hitouts_game %}<td>{{ p['max_hitouts_game'] or 0 }}</td>{% endif %}
     {% if visible.max_tackles_game %}<td>{{ p['max_tackles_game'] or 0 }}</td>{% endif %}
 
+    {% if visible.leading_gk %}
+        <td>{{ p['leading_gk_wins'] or 0 }} / {{ p['leading_gk_goals'] or 0 }}</td>
+    {% endif %}
+
+    {# ✅ Wooden Spoon cells MUST be here (same place as headers) #}
+    {% if visible.wooden_spoons %}
+        <td>{{ wooden_spoon_counts.get(p['player_id'], 0) }}</td>
+    {% endif %}
+
+    {% if visible.wooden_spoon_years %}
+        <td class="aa-years">
+            {% for yr, club in wooden_spoon_years.get(p['player_id'], []) %}
+                {{ yr }} ({{ club }}){% if not loop.last %}, {% endif %}
+            {% endfor %}
+        </td>
+    {% endif %}
+
     {% if visible.all_aus %}<td>{{ p['all_aus_count'] or 0 }}</td>{% endif %}
+
     {% if visible.all_aus_years %}
-    <td class="aa-years">
-        {% for y in aa_years.get(p['player_id'], []) %}
-            {{ y }}{% if not loop.last %}, {% endif %}
-        {% endfor %}
-    </td>
+        <td class="aa-years">
+            {% for y in aa_years.get(p['player_id'], []) %}
+                {{ y }}{% if not loop.last %}, {% endif %}
+            {% endfor %}
+        </td>
+    {% endif %}
+
+    {# ✅ 22u22 cells MUST come AFTER AA cells #}
+    {% if visible['22u22'] %}
+        <td>{{ u22_counts.get(p['player_id'], 0) }}</td>
+    {% endif %}
+
+    {% if visible['22u22_years'] %}
+        <td class="aa-years">
+            {% for y in u22_years.get(p['player_id'], []) %}
+                {{ y }}{% if not loop.last %}, {% endif %}
+            {% endfor %}
+        </td>
     {% endif %}
 
     {% if visible.draft_pick %}
-    <td class="draft-pick">
-        {% set dp = unified_draft.get(p['player_id']) %}
-        {% if dp %}{{ dp.display }}{% else %}—{% endif %}
-    </td>
+        <td class="draft-pick">
+            {% set dp = unified_draft.get(p['player_id']) %}
+            {% if dp %}{{ dp.display }}{% else %}—{% endif %}
+        </td>
     {% endif %}
 
-    {% if visible.rs_noms %}
-    <td class="rs">{{ rs_counts.get(p['player_id'], 0) }}</td>
-    {% endif %}
+    {% if visible.rs_noms %}<td class="rs">{{ rs_counts.get(p['player_id'], 0) }}</td>{% endif %}
     {% if visible.brownlow_wins %}<td>{{ p['brownlow_wins'] }}</td>{% endif %}
     {% if visible.brownlow_votes %}<td>{{ p['brownlow_votes'] }}</td>{% endif %}
-    {% if visible.wooden_spoons %}
-		<td>{{ p['wooden_spoon_count'] or 0 }}</td>
-	{% endif %}
-	
-	{% if visible.wooden_spoon_years %}
-		<td class="aa-years">
-			{% for yr, club in wooden_spoon_years.get(p['player_id'], []) %}
-				{{ yr }} ({{ club }}){% if not loop.last %}, {% endif %}
-			{% endfor %}
-		</td>
-	{% endif %}
 
-	{% if visible.bnf_count %}
-		<td>{{ p['bnf_count'] or 0 }}</td>
-	{% endif %}
+    {% if visible.bnf_count %}<td>{{ p['bnf_count'] or 0 }}</td>{% endif %}
 
-	{% if visible.bnf_years %}
-		<td class="aa-years">
-			{% for yr, club in bnf_years.get(p['player_id'], []) %}
-				{{ yr }} ({{ club }}){% if not loop.last %}, {% endif %}
-			{% endfor %}
-		</td>
-	{% endif %}
+    {% if visible.bnf_years %}
+        <td class="aa-years">
+            {% for yr, club in bnf_years.get(p['player_id'], []) %}
+                {{ yr }} ({{ club }}){% if not loop.last %}, {% endif %}
+            {% endfor %}
+        </td>
+    {% endif %}
 
     {% if visible.gf_apps %}
-    <td>{{ p['gf_wins'] or 0 }}-{{ p['gf_draws'] or 0 }}-{{ p['gf_losses'] or 0 }}</td>
+        <td>{{ p['gf_wins'] or 0 }}-{{ p['gf_draws'] or 0 }}-{{ p['gf_losses'] or 0 }}</td>
     {% endif %}
     {% if visible.gf_wins %}<td>{{ p['gf_wins'] or 0 }}</td>{% endif %}
     {% if visible.height %}<td>{{ p['height'] or '' }}</td>{% endif %}
     {% if visible.years %}<td>{{ p['first_year'] }} - {{ p['last_year'] }}</td>{% endif %}
 
     {% if visible.club_stats %}
-    <td class="club-stats">
-        {% for row in get_player_club_stats(p['player_id']) %}
-            <div>{{ row.team }}: {{ row.games }}g / {{ row.goals }}gl</div>
-        {% endfor %}
-    </td>
+        <td class="club-stats">
+            {% for row in get_player_club_stats(p['player_id']) %}
+                <div>{{ row.team }}: {{ row.games }}g / {{ row.goals }}gl</div>
+            {% endfor %}
+        </td>
     {% endif %}
 </tr>
 {% endfor %}

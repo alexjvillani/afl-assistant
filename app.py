@@ -329,29 +329,12 @@ def get_top10_season(year, stat):
     conn.close()
     return rows
     
-# -------------------------------------------------
-# SCHEMA SAFETY (Wooden Spoon)
-# -------------------------------------------------
-
-def ensure_wooden_spoon_column():
-    conn = sqlite3.connect(DB_PATH)
-    c = conn.cursor()
-
-    c.execute("PRAGMA table_info(players)")
-    existing = set([row[1] for row in c.fetchall()])
-
-    if "wooden_spoon_count" not in existing:
-        print "Adding missing column: wooden_spoon_count"
-        c.execute("""
-            ALTER TABLE players
-            ADD COLUMN wooden_spoon_count INTEGER DEFAULT 0
-        """)
-
-    conn.commit()
-    conn.close()
-
-
-ensure_wooden_spoon_column()
+def get_wooden_spoon_counts():
+    """
+    player_id -> total wooden spoon count
+    """
+    years = get_wooden_spoon_years_map()
+    return {pid: len(v) for pid, v in years.items()}
 
 # -------------------------------------------------
 # WOODEN SPOON HELPERS
@@ -360,22 +343,79 @@ ensure_wooden_spoon_column()
 def get_wooden_spoon_years_map():
     """
     player_id -> list of (year, team)
+    Deduplicated at (player, year, team) level
     """
     conn = get_db()
     c = conn.cursor()
 
     c.execute("""
-        SELECT player_id, year, team
+        SELECT DISTINCT
+            player_id,
+            year,
+            team
         FROM wooden_spoons
         ORDER BY year DESC
     """)
 
     ws = {}
-    for pid, yr, team in c.fetchall():
-        ws.setdefault(pid, []).append((yr, team))
+    for pid, year, team in c.fetchall():
+        ws.setdefault(pid, []).append((year, team))
 
     conn.close()
     return ws
+    
+def normalise_player_id(pid):
+    """
+    Convert any 22u22 player_id into full afltables URL
+    """
+    if not pid:
+        return None
+
+    pid = pid.strip()
+
+    if pid.startswith("http"):
+        return pid
+
+    # Nick_Daicos.html
+    if pid.endswith(".html"):
+        letter = pid[0].upper()
+        return "https://afltables.com/afl/stats/players/%s/%s" % (letter, pid)
+
+    # Nick_Daicos
+    letter = pid[0].upper()
+    return "https://afltables.com/afl/stats/players/%s/%s.html" % (letter, pid)
+    
+def get_22u22_years_map():
+    conn = get_db()
+    c = conn.cursor()
+
+    c.execute("""
+        SELECT player_id, year
+        FROM player_22u22
+        ORDER BY year DESC
+    """)
+
+    u22 = {}
+    for pid, yr in c.fetchall():
+        u22.setdefault(pid, []).append(yr)
+
+    conn.close()
+    return u22
+
+
+def get_22u22_counts():
+    conn = get_db()
+    c = conn.cursor()
+
+    c.execute("""
+        SELECT player_id, COUNT(*)
+        FROM player_22u22
+        GROUP BY player_id
+    """)
+
+    counts = {pid: cnt for pid, cnt in c.fetchall()}
+    conn.close()
+    return counts
 
 # -------------------------------------------------
 # QUERY
@@ -473,12 +513,15 @@ def query_players(filters):
         params.append(filters["min_all_aus"])
         
     if filters.get("min_wooden_spoons"):
-        query += " AND wooden_spoon_count >= ?"
+        query += """
+            AND player_id IN (
+                SELECT player_id
+                FROM wooden_spoons
+                GROUP BY player_id
+                HAVING COUNT(*) >= ?
+            )
+        """
         params.append(filters["min_wooden_spoons"])
-
-    if filters.get("max_wooden_spoons"):
-        query += " AND wooden_spoon_count <= ?"
-        params.append(filters["max_wooden_spoons"])
 
     if filters.get("min_height"):
         query += " AND height >= ?"
@@ -548,9 +591,12 @@ def index():
     aa_years = get_aa_years_map()
     rs_counts = get_rs_counts()
     bnf_years = get_bnf_years_map()
+    u22_years = get_22u22_years_map()
+    u22_counts = get_22u22_counts()
 
     # ✅ Wooden Spoon YEARS (list of years + club)
     wooden_spoon_years = get_wooden_spoon_years_map()
+    wooden_spoon_counts = get_wooden_spoon_counts()
 
     # ✅ Unified draft pick (AA + B&F combined)
     unified_draft = get_unified_draft_picks()
@@ -573,9 +619,14 @@ def index():
         aa_years=aa_years,
         rs_counts=rs_counts,
         bnf_years=bnf_years,
+        
+            # 22 Under 22
+        u22_years=u22_years,
+        u22_counts=u22_counts,
 
         # Wooden Spoon
         wooden_spoon_years=wooden_spoon_years,
+        wooden_spoon_counts=wooden_spoon_counts,
 
         # Draft
         unified_draft=unified_draft,
