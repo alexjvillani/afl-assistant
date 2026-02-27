@@ -148,6 +148,18 @@ Min Nominations:
 
 <br><br>
 
+<strong>Wooden Spoon</strong><br>
+
+Min Spoons:
+<input type="number" name="min_wooden_spoons"
+       value="{{ filters.min_wooden_spoons or '' }}">
+
+Max Spoons:
+<input type="number" name="max_wooden_spoons"
+       value="{{ filters.max_wooden_spoons or '' }}">
+
+<br><br>
+
 <strong>Height (cm)</strong><br>
 
 Min Height:
@@ -192,6 +204,7 @@ Min Votes:
     <option value="bnf_count">Best & Fairest Wins</option>
 	<option value="leading_gk_wins">Coleman Wins</option>
 	<option value="leading_gk_goals">Coleman Goals (H&amp;A)</option>
+	<option value="wooden_spoon_count">Wooden Spoons</option>
     <option value="first_year">First Year</option>
     <option value="last_year">Last Year</option>
 </select>
@@ -249,6 +262,8 @@ Min Votes:
     <label><input type="checkbox" name="show_bnf_count" {% if visible.bnf_count %}checked{% endif %}> Best & Fairest Wins</label>
     <label><input type="checkbox" name="show_bnf_years" {% if visible.bnf_years %}checked{% endif %}> B&F Years</label>
 	<label><input type="checkbox" name="show_leading_gk"{% if visible.leading_gk %}checked{% endif %}>Coleman (H&amp;A)</label>
+	<label><input type="checkbox" name="show_wooden_spoons"{% if visible.wooden_spoons %}checked{% endif %}>Wooden Spoons</label>
+	<label><input type="checkbox" name="show_wooden_spoon_years"{% if visible.wooden_spoon_years %}checked{% endif %}>Wooden Spoon Years</label>
 </div>
 </details>
 
@@ -294,6 +309,8 @@ Min Votes:
     {% if visible.max_hitouts_game %}<th>Max HO</th>{% endif %}
     {% if visible.max_tackles_game %}<th>Max T</th>{% endif %}
 	{% if visible.leading_gk %}<th>Coleman</th>{% endif %}
+	{% if visible.wooden_spoons %}<th>Wooden Spoon</th>{% endif %}
+	{% if visible.wooden_spoon_years %}<th>Wooden Spoon Years</th>{% endif %}
     {% if visible.all_aus %}<th>AA</th>{% endif %}
     {% if visible.all_aus_years %}<th>AA Years</th>{% endif %}
     {% if visible.draft_pick %}<th>Draft Pick</th>{% endif %}
@@ -346,22 +363,28 @@ Min Votes:
     {% endif %}
     {% if visible.brownlow_wins %}<td>{{ p['brownlow_wins'] }}</td>{% endif %}
     {% if visible.brownlow_votes %}<td>{{ p['brownlow_votes'] }}</td>{% endif %}
-    {% if visible.bnf_count %}<td>{{ p['bnf_count'] or 0 }}</td>{% endif %}
-    {% if visible.bnf_years %}
-    <td class="aa-years">
-        {% for yr, club in bnf_years.get(p['player_id'], []) %}
-            {{ yr }} ({{ club }}){% if not loop.last %}, {% endif %}
-        {% endfor %}
-    </td>
-    {% endif %}
-	{% if visible.leading_gk %}
-	<td>
-		{% if p['leading_gk_wins'] > 0 %}
-			{{ p['leading_gk_wins'] }}
-		{% else %}
-			—
-		{% endif %}
-	</td>
+    {% if visible.wooden_spoons %}
+		<td>{{ p['wooden_spoon_count'] or 0 }}</td>
+	{% endif %}
+	
+	{% if visible.wooden_spoon_years %}
+		<td class="aa-years">
+			{% for yr, club in wooden_spoon_years.get(p['player_id'], []) %}
+				{{ yr }} ({{ club }}){% if not loop.last %}, {% endif %}
+			{% endfor %}
+		</td>
+	{% endif %}
+
+	{% if visible.bnf_count %}
+		<td>{{ p['bnf_count'] or 0 }}</td>
+	{% endif %}
+
+	{% if visible.bnf_years %}
+		<td class="aa-years">
+			{% for yr, club in bnf_years.get(p['player_id'], []) %}
+				{{ yr }} ({{ club }}){% if not loop.last %}, {% endif %}
+			{% endfor %}
+		</td>
 	{% endif %}
 
     {% if visible.gf_apps %}

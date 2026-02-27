@@ -328,6 +328,54 @@ def get_top10_season(year, stat):
     rows = c.fetchall()
     conn.close()
     return rows
+    
+# -------------------------------------------------
+# SCHEMA SAFETY (Wooden Spoon)
+# -------------------------------------------------
+
+def ensure_wooden_spoon_column():
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+
+    c.execute("PRAGMA table_info(players)")
+    existing = set([row[1] for row in c.fetchall()])
+
+    if "wooden_spoon_count" not in existing:
+        print "Adding missing column: wooden_spoon_count"
+        c.execute("""
+            ALTER TABLE players
+            ADD COLUMN wooden_spoon_count INTEGER DEFAULT 0
+        """)
+
+    conn.commit()
+    conn.close()
+
+
+ensure_wooden_spoon_column()
+
+# -------------------------------------------------
+# WOODEN SPOON HELPERS
+# -------------------------------------------------
+
+def get_wooden_spoon_years_map():
+    """
+    player_id -> list of (year, team)
+    """
+    conn = get_db()
+    c = conn.cursor()
+
+    c.execute("""
+        SELECT player_id, year, team
+        FROM wooden_spoons
+        ORDER BY year DESC
+    """)
+
+    ws = {}
+    for pid, yr, team in c.fetchall():
+        ws.setdefault(pid, []).append((yr, team))
+
+    conn.close()
+    return ws
 
 # -------------------------------------------------
 # QUERY
@@ -423,6 +471,14 @@ def query_players(filters):
     if filters.get("min_all_aus"):
         query += " AND all_aus_count >= ?"
         params.append(filters["min_all_aus"])
+        
+    if filters.get("min_wooden_spoons"):
+        query += " AND wooden_spoon_count >= ?"
+        params.append(filters["min_wooden_spoons"])
+
+    if filters.get("max_wooden_spoons"):
+        query += " AND wooden_spoon_count <= ?"
+        params.append(filters["max_wooden_spoons"])
 
     if filters.get("min_height"):
         query += " AND height >= ?"
@@ -469,6 +525,9 @@ def index():
     filters = {}
     visible = {}
 
+    # ---------------------------------
+    # Parse filters + visible columns
+    # ---------------------------------
     for k, v in raw.items():
         val = scalar(v)
         if k.startswith("show_"):
@@ -476,23 +535,54 @@ def index():
         else:
             filters[k] = val
 
+    # ---------------------------------
+    # Main query
+    # ---------------------------------
     players = query_players(filters)
     total_results = len(players)
 
+    # ---------------------------------
+    # Lookup / helper maps
+    # ---------------------------------
+    player_options = get_player_options()
+    aa_years = get_aa_years_map()
+    rs_counts = get_rs_counts()
+    bnf_years = get_bnf_years_map()
+
+    # ✅ Wooden Spoon YEARS (list of years + club)
+    wooden_spoon_years = get_wooden_spoon_years_map()
+
+    # ✅ Unified draft pick (AA + B&F combined)
+    unified_draft = get_unified_draft_picks()
+
+    # ---------------------------------
+    # Render
+    # ---------------------------------
     return render_template(
         "index.html",
         players=players,
         total_results=total_results,
+
         teams=TEAM_OPTIONS,
         filters=filters,
         visible=visible,
-        player_options=get_player_options(),
-        aa_years=get_aa_years_map(),
-        rs_counts=get_rs_counts(),
-        bnf_years=get_bnf_years_map(),
-        unified_draft=get_unified_draft_picks(),
+
+        player_options=player_options,
+
+        # Awards
+        aa_years=aa_years,
+        rs_counts=rs_counts,
+        bnf_years=bnf_years,
+
+        # Wooden Spoon
+        wooden_spoon_years=wooden_spoon_years,
+
+        # Draft
+        unified_draft=unified_draft,
+
+        # Helpers
         get_player_club_stats=get_player_club_stats,
-        get_player_teams=get_player_teams,   # ✅ NEW
+        get_player_teams=get_player_teams,   # ✅ already correct
     )
 # -------------------------------------------------
 # NICHE ROUTE — SEASON TOP 10s
