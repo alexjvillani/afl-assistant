@@ -337,7 +337,7 @@ def get_wooden_spoon_counts():
     return {pid: len(v) for pid, v in years.items()}
 
 # -------------------------------------------------
-# WOODEN SPOON HELPERS
+# WOODEN SPOON HELPERSahgcbvc 
 # -------------------------------------------------
 
 def get_wooden_spoon_years_map():
@@ -513,15 +513,12 @@ def query_players(filters):
         params.append(filters["min_all_aus"])
         
     if filters.get("min_wooden_spoons"):
-        query += """
-            AND player_id IN (
-                SELECT player_id
-                FROM wooden_spoons
-                GROUP BY player_id
-                HAVING COUNT(*) >= ?
-            )
-        """
+        query += " AND wooden_spoon_count >= ?"
         params.append(filters["min_wooden_spoons"])
+
+    if filters.get("max_wooden_spoons"):
+        query += " AND wooden_spoon_count <= ?"
+        params.append(filters["max_wooden_spoons"])
 
     if filters.get("min_height"):
         query += " AND height >= ?"
