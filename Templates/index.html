@@ -124,6 +124,18 @@ Max Tackles:
 
 <br><br>
 
+Min Best Season Votes:
+<input type="number"
+       name="min_best_brownlow_votes"
+       value="{{ filters.min_best_brownlow_votes or '' }}">
+
+Max Best Season Votes:
+<input type="number"
+       name="max_best_brownlow_votes"
+       value="{{ filters.max_best_brownlow_votes or '' }}">
+
+<br><br>
+
 <strong>All-Australian</strong><br>
 
 Min Selections:
@@ -200,6 +212,7 @@ Min Votes:
     <option value="all_aus_count">All-Australian Selections</option>
     <option value="brownlow_votes">Brownlow Votes</option>
     <option value="brownlow_wins">Brownlow Wins</option>
+	<option value="best_brownlow_votes">Best Brownlow Votes (Season)</option>
     <option value="gf_wins">GF Wins</option>
     <option value="bnf_count">Best & Fairest Wins</option>
 	<option value="leading_gk_wins">Coleman Wins</option>
@@ -256,9 +269,8 @@ Min Votes:
     <label><input type="checkbox" name="show_draft_pick" {% if visible.draft_pick %}checked{% endif %}> Draft Pick</label>
 
     <label><input type="checkbox" name="show_rs_noms" {% if visible.rs_noms %}checked{% endif %}> Rising Star Noms</label>
-    <label><input type="checkbox" name="show_wins" {% if visible.brownlow_wins %}checked{% endif %}> Brownlow Wins</label>
-    <label><input type="checkbox" name="show_votes" {% if visible.brownlow_votes %}checked{% endif %}> Brownlow Votes</label>
-
+    <label><input type="checkbox" name="show_brownlow_wins" {% if visible.brownlow_wins %}checked{% endif %}> Brownlow Wins</label>
+	<label><input type="checkbox" name="show_brownlow_votes" {% if visible.brownlow_votes %}checked{% endif %}>Brownlow Votes</label>
     <label><input type="checkbox" name="show_bnf_count" {% if visible.bnf_count %}checked{% endif %}> Best & Fairest Wins</label>
     <label><input type="checkbox" name="show_bnf_years" {% if visible.bnf_years %}checked{% endif %}> B&F Years</label>
 	<label><input type="checkbox" name="show_leading_gk"{% if visible.leading_gk %}checked{% endif %}>Coleman (H&amp;A)</label>
@@ -402,7 +414,6 @@ Min Votes:
     {% if visible.rs_noms %}<td class="rs">{{ rs_counts.get(p['player_id'], 0) }}</td>{% endif %}
     {% if visible.brownlow_wins %}<td>{{ p['brownlow_wins'] }}</td>{% endif %}
     {% if visible.brownlow_votes %}<td>{{ p['brownlow_votes'] }}</td>{% endif %}
-
     {% if visible.bnf_count %}<td>{{ p['bnf_count'] or 0 }}</td>{% endif %}
 
     {% if visible.bnf_years %}

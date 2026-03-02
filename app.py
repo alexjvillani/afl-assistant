@@ -416,7 +416,7 @@ def get_22u22_counts():
     counts = {pid: cnt for pid, cnt in c.fetchall()}
     conn.close()
     return counts
-
+    
 # -------------------------------------------------
 # QUERY
 # -------------------------------------------------
@@ -511,6 +511,24 @@ def query_players(filters):
     if filters.get("min_all_aus"):
         query += " AND all_aus_count >= ?"
         params.append(filters["min_all_aus"])
+        
+        # --- Brownlow (career) ---
+    if filters.get("min_wins"):
+        query += " AND brownlow_wins >= ?"
+        params.append(filters["min_wins"])
+
+    if filters.get("min_votes"):
+        query += " AND brownlow_votes >= ?"
+        params.append(filters["min_votes"])
+    
+    # --- Best Brownlow Season ---
+    if filters.get("min_best_brownlow_votes"):
+        query += " AND best_brownlow_votes >= ?"
+        params.append(filters["min_best_brownlow_votes"])
+
+    if filters.get("max_best_brownlow_votes"):
+        query += " AND best_brownlow_votes <= ?"
+        params.append(filters["max_best_brownlow_votes"])
         
     if filters.get("min_wooden_spoons"):
         query += " AND wooden_spoon_count >= ?"
