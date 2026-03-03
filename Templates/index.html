@@ -136,6 +136,24 @@ Max Best Season Votes:
 
 <br><br>
 
+<strong>Finals Peaks</strong><br>
+
+Min Goals (Final):
+<input type="number"
+       name="min_max_finals_goals"
+       value="{{ filters.min_max_finals_goals or '' }}">
+
+Min Disposals (Final):
+<input type="number"
+       name="min_max_finals_disposals"
+       value="{{ filters.min_max_finals_disposals or '' }}">
+	  
+Min Total Finals Goals:
+<input type="number"
+       name="min_total_finals_goals"
+       value="{{ filters.min_total_finals_goals or '' }}">
+<br><br>
+
 <strong>All-Australian</strong><br>
 
 Min Selections:
@@ -244,6 +262,16 @@ Min Votes:
         {% if filters.sort_by == "gf_wins" %}selected{% endif %}>
         GF Wins
     </option>
+	
+	<option value="finals_win_pct"
+		{% if filters.sort_by == "finals_win_pct" %}selected{% endif %}>
+		Finals Win %
+	</option>
+
+	<option value="finals_record"
+		{% if filters.sort_by == "finals_record" %}selected{% endif %}>
+		Finals Wins
+	</option>
 
     <option value="bnf_count"
         {% if filters.sort_by == "bnf_count" %}selected{% endif %}>
@@ -336,6 +364,37 @@ Min Votes:
 </details>
 
 <details>
+<summary>Finals</summary>
+<div class="group">
+
+    <label>
+        <input type="checkbox" name="show_finals_record"
+        {% if visible.finals_record %}checked{% endif %}>
+        Finals Record
+    </label>
+
+    <label>
+        <input type="checkbox" name="show_total_finals_goals"
+        {% if visible.total_finals_goals %}checked{% endif %}>
+        Total Finals Goals
+    </label>
+
+    <label>
+        <input type="checkbox" name="show_max_finals_goals"
+        {% if visible.max_finals_goals %}checked{% endif %}>
+        Max Goals (Final)
+    </label>
+
+    <label>
+        <input type="checkbox" name="show_max_finals_disposals"
+        {% if visible.max_finals_disposals %}checked{% endif %}>
+        Max Disposals (Final)
+    </label>
+
+</div>
+</details>
+
+<details>
 <summary>Physical & Career Span</summary>
 <div class="group">
     <label><input type="checkbox" name="show_height" {% if visible.height %}checked{% endif %}> Height</label>
@@ -393,6 +452,11 @@ Min Votes:
 
     {% if visible['22u22'] %}<th>22u22</th>{% endif %}
     {% if visible['22u22_years'] %}<th>22u22 Years</th>{% endif %}
+
+	{% if visible.finals_record %}<th>Finals (W-L-D)</th>{% endif %}
+	{% if visible.total_finals_goals %}<th>Total Finals Goals</th>{% endif %}
+	{% if visible.max_finals_goals %}<th>Max G (Final)</th>{% endif %}
+	{% if visible.max_finals_disposals %}<th>Max D (Final)</th>{% endif %}
 
     {% if visible.draft_pick %}<th>Draft Pick</th>{% endif %}
     {% if visible.rs_noms %}<th>RS</th>{% endif %}
@@ -462,6 +526,34 @@ Min Votes:
             {% endfor %}
         </td>
     {% endif %}
+	
+	{% if visible.finals_record %}
+		<td>
+			{{ p['finals_wins'] or 0 }}-
+			{{ p['finals_losses'] or 0 }}-
+			{{ p['finals_draws'] or 0 }}
+		</td>
+	{% endif %}
+
+	{% if visible.total_finals_goals %}
+	<td>{{ p['total_finals_goals'] or 0 }}</td>
+	{% endif %}
+
+	{% if visible.max_finals_goals %}
+	<td>{{ p['max_finals_goals'] or 0 }}</td>
+	{% endif %}
+
+	{% if visible.max_finals_disposals %}
+	<td>
+		{% if p['max_finals_disposals'] is not none %}
+			{{ p['max_finals_disposals'] }}
+		{% else %}
+			—
+		{% endif %}
+	</td>
+	{% endif %}
+	
+	
 
     {% if visible.draft_pick %}
         <td class="draft-pick">

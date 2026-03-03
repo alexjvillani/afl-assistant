@@ -537,6 +537,22 @@ def query_players(filters):
     if filters.get("max_wooden_spoons"):
         query += " AND wooden_spoon_count <= ?"
         params.append(filters["max_wooden_spoons"])
+        
+    if filters.get("min_finals_played"):
+        query += " AND finals_played >= ?"
+        params.append(filters["min_finals_played"])
+        
+    if filters.get("min_max_finals_goals"):
+        query += " AND max_finals_goals >= ?"
+        params.append(filters["min_max_finals_goals"])
+        
+    if filters.get("min_max_finals_disposals"):
+        query += " AND max_finals_disposals >= ?"
+        params.append(filters["min_max_finals_disposals"])
+        
+    if filters.get("min_total_finals_goals"):
+        query += " AND total_finals_goals >= ?"
+        params.append(filters["min_total_finals_goals"])
 
     if filters.get("min_height"):
         query += " AND height >= ?"
@@ -565,7 +581,23 @@ def query_players(filters):
     sort_column = filters.get("sort_by") or "career_games"
     sort_order = filters.get("sort_order") or "DESC"
 
-    query += " ORDER BY %s %s" % (sort_column, sort_order)
+    if sort_column == "finals_win_pct":
+
+        query += """
+            ORDER BY
+            CASE
+                WHEN finals_played < 5 THEN NULL
+                ELSE (CAST(finals_wins AS FLOAT) / finals_played)
+            END %s
+        """ % sort_order
+
+    elif sort_column == "finals_record":
+
+        query += " ORDER BY finals_wins %s" % sort_order
+
+    else:
+
+        query += " ORDER BY %s %s" % (sort_column, sort_order)
 
     c.execute(query, params)
     rows = c.fetchall()
