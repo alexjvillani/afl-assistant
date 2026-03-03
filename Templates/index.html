@@ -205,21 +205,75 @@ Min Votes:
 <strong>Sort</strong><br>
 
 <select name="sort_by">
-    <option value="career_games">Career Games</option>
-    <option value="career_goals">Career Goals</option>
-    <option value="max_goals_game">Max Goals (Game)</option>
-    <option value="max_goals_season">Max Goals (Season)</option>
-    <option value="all_aus_count">All-Australian Selections</option>
-    <option value="brownlow_votes">Brownlow Votes</option>
-    <option value="brownlow_wins">Brownlow Wins</option>
-	<option value="best_brownlow_votes">Best Brownlow Votes (Season)</option>
-    <option value="gf_wins">GF Wins</option>
-    <option value="bnf_count">Best & Fairest Wins</option>
-	<option value="leading_gk_wins">Coleman Wins</option>
-	<option value="leading_gk_goals">Coleman Goals (H&amp;A)</option>
-	<option value="wooden_spoon_count">Wooden Spoons</option>
-    <option value="first_year">First Year</option>
-    <option value="last_year">Last Year</option>
+    <option value="career_games"
+        {% if filters.sort_by == "career_games" %}selected{% endif %}>
+        Career Games
+    </option>
+
+    <option value="career_goals"
+        {% if filters.sort_by == "career_goals" %}selected{% endif %}>
+        Career Goals
+    </option>
+
+    <option value="max_goals_game"
+        {% if filters.sort_by == "max_goals_game" %}selected{% endif %}>
+        Max Goals (Game)
+    </option>
+
+    <option value="max_goals_season"
+        {% if filters.sort_by == "max_goals_season" %}selected{% endif %}>
+        Max Goals (Season)
+    </option>
+
+    <option value="all_aus_count"
+        {% if filters.sort_by == "all_aus_count" %}selected{% endif %}>
+        All-Australian Selections
+    </option>
+
+    <option value="brownlow_votes"
+        {% if filters.sort_by == "brownlow_votes" %}selected{% endif %}>
+        Brownlow Votes
+    </option>
+
+    <option value="brownlow_wins"
+        {% if filters.sort_by == "brownlow_wins" %}selected{% endif %}>
+        Brownlow Wins
+    </option>
+
+    <option value="gf_wins"
+        {% if filters.sort_by == "gf_wins" %}selected{% endif %}>
+        GF Wins
+    </option>
+
+    <option value="bnf_count"
+        {% if filters.sort_by == "bnf_count" %}selected{% endif %}>
+        Best & Fairest Wins
+    </option>
+
+    <option value="leading_gk_wins"
+        {% if filters.sort_by == "leading_gk_wins" %}selected{% endif %}>
+        Coleman Wins
+    </option>
+
+    <option value="leading_gk_goals"
+        {% if filters.sort_by == "leading_gk_goals" %}selected{% endif %}>
+        Coleman Goals (H&amp;A)
+    </option>
+
+    <option value="wooden_spoon_count"
+        {% if filters.sort_by == "wooden_spoon_count" %}selected{% endif %}>
+        Wooden Spoons
+    </option>
+
+    <option value="first_year"
+        {% if filters.sort_by == "first_year" %}selected{% endif %}>
+        First Year
+    </option>
+
+    <option value="last_year"
+        {% if filters.sort_by == "last_year" %}selected{% endif %}>
+        Last Year
+    </option>
 </select>
 
 <select name="sort_order">
@@ -298,7 +352,12 @@ Min Votes:
 </div>
 </details>
 
+<br><br>
+
 <button type="submit">Search</button>
+<a href="{{ url_for('index') }}">
+    <button type="button">Reset Filters</button>
+</a>
 
 </form>
 </div>
