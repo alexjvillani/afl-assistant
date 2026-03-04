@@ -1,26 +1,147 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Gridley AFL Assistant</title>
-    <style>
-        body { font-family: Arial; background:#f4f4f4; padding:20px; }
-        table { border-collapse: collapse; width:100%; background:white; }
-        th, td { border:1px solid #ddd; padding:6px; text-align:center; vertical-align:top; }
-        th { background:#222; color:white; }
-        tr:nth-child(even) { background:#f2f2f2; }
-        .box { background:white; padding:15px; margin-bottom:20px; }
-        label { margin-right:15px; white-space:nowrap; }
-        input[type="number"] { width:80px; }
-        .club-stats { font-size:12px; text-align:left; }
-        .club-stats div { margin-bottom:2px; }
-        .aa-years { font-size:11px; color:#555; text-align:left; }
-        .draft-pick { font-size:11px; color:#333; font-weight:bold; }
-        .rs { font-weight:bold; color:#006400; }
-    </style>
+<title>Gridley AFL Assistant</title>
+
+<style>
+
+body {
+    font-family: Arial;
+    background:#f4f4f4;
+    padding:20px;
+}
+
+table {
+    border-collapse: collapse;
+    width:100%;
+    background:white;
+}
+
+th, td {
+    border:1px solid #ddd;
+    padding:6px;
+    text-align:center;
+    vertical-align:top;
+}
+
+th {
+    background:#222;
+    color:white;
+}
+
+tr:nth-child(even) {
+    background:#f2f2f2;
+}
+
+.box {
+    background:white;
+    padding:15px;
+    margin-bottom:20px;
+}
+
+label {
+    margin-right:15px;
+    white-space:nowrap;
+}
+
+input[type="number"] {
+    width:80px;
+}
+
+.club-stats {
+    font-size:12px;
+    text-align:left;
+}
+
+.club-stats div {
+    margin-bottom:2px;
+}
+
+.aa-years {
+    font-size:11px;
+    color:#555;
+    text-align:left;
+}
+
+.draft-pick {
+    font-size:11px;
+    color:#333;
+    font-weight:bold;
+}
+
+.rs {
+    font-weight:bold;
+    color:#006400;
+}
+
+/* DARK MODE */
+
+body.dark {
+    background:#121212;
+    color:#e0e0e0;
+}
+
+body.dark table {
+    background:#1e1e1e;
+}
+
+body.dark th {
+    background:#000;
+}
+
+body.dark td {
+    border:1px solid #333;
+}
+
+body.dark tr:nth-child(even) {
+    background:#1a1a1a;
+}
+
+body.dark .box {
+    background:#1e1e1e;
+}
+
+body.dark input,
+body.dark select {
+    background:#2b2b2b;
+    color:#e0e0e0;
+    border:1px solid #555;
+}
+
+body.dark a {
+    color:#4ea3ff;
+}
+
+body.dark .aa-years {
+    color:#aaa;
+}
+
+/* Toggle Button */
+
+#darkBtn{
+    padding:8px 14px;
+    border:none;
+    background:#222;
+    color:white;
+    border-radius:6px;
+    cursor:pointer;
+    margin-bottom:15px;
+}
+
+#darkBtn:hover{
+    background:#444;
+}
+
+</style>
 </head>
+
 <body>
 
 <h1>🏉 Gridley AFL Assistant</h1>
+
+<button onclick="toggleDarkMode()" id="darkBtn">
+🌙 Toggle Dark Mode
+</button>
 
 <div class="box">
 <form method="get">
@@ -592,6 +713,30 @@ Min Votes:
 </tr>
 {% endfor %}
 </table>
+
+<script>
+
+function toggleDarkMode(){
+
+document.body.classList.toggle("dark");
+
+if(document.body.classList.contains("dark")){
+localStorage.setItem("darkmode","on");
+}else{
+localStorage.setItem("darkmode","off");
+}
+
+}
+
+window.onload = function(){
+
+if(localStorage.getItem("darkmode") === "on"){
+document.body.classList.add("dark");
+}
+
+}
+
+</script>
 
 </body>
 </html>
