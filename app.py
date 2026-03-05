@@ -553,6 +553,14 @@ def query_players(filters):
     if filters.get("min_total_finals_goals"):
         query += " AND total_finals_goals >= ?"
         params.append(filters["min_total_finals_goals"])
+        
+    if filters.get("min_max_GF_goals"):
+        query += " AND max_GF_goals >= ?"
+        params.append(filters["min_max_GF_goals"])
+
+    if filters.get("max_max_GF_goals"):
+        query += " AND max_GF_goals <= ?"
+        params.append(filters["max_max_GF_goals"])
 
     if filters.get("min_height"):
         query += " AND height >= ?"
@@ -594,6 +602,10 @@ def query_players(filters):
     elif sort_column == "finals_record":
 
         query += " ORDER BY finals_wins %s" % sort_order
+        
+    elif sort_column == "gf_record":
+
+        query += " ORDER BY gf_wins %s" % sort_order
 
     else:
 
