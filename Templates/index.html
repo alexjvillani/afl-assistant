@@ -314,6 +314,15 @@ Min Nominations:
 
 <br><br>
 
+<strong>Minor Premierships</strong><br>
+
+Min Minor Premierships:
+<input type="number"
+       name="min_minor_prems"
+       value="{{ filters.min_minor_prems or '' }}">
+
+<br><br>
+
 <strong>Wooden Spoon</strong><br>
 
 Min Spoons:
@@ -433,6 +442,11 @@ Min Votes:
         {% if filters.sort_by == "wooden_spoon_count" %}selected{% endif %}>
         Wooden Spoons
     </option>
+	
+	<option value="minor_prem_count"
+		{% if filters.sort_by == "minor_prem_count" %}selected{% endif %}>
+		Minor Premierships
+	</option>
 
     <option value="first_year"
         {% if filters.sort_by == "first_year" %}selected{% endif %}>
@@ -501,6 +515,8 @@ Min Votes:
 	<label><input type="checkbox" name="show_wooden_spoon_years"{% if visible.wooden_spoon_years %}checked{% endif %}>Wooden Spoon Years</label>
 	<label><input type="checkbox" name="show_22u22"{% if visible['22u22'] %}checked{% endif %}>22 Under 22</label>
 	<label><input type="checkbox" name="show_22u22_years"{% if visible['22u22_years'] %}checked{% endif %}>22u22 Years</label>
+	<label><input type="checkbox" name="show_minor_prems"{% if visible.minor_prems %}checked{% endif %}>Minor Premierships</label>
+	<label><input type="checkbox" name="show_minor_prem_years"{% if visible.minor_prem_years %}checked{% endif %}>Minor Prem Years</label>
 </div>
 </details>
 
@@ -587,6 +603,9 @@ Min Votes:
     {# ✅ Wooden Spoon MUST come BEFORE AA/22u22 in BOTH header + row #}
     {% if visible.wooden_spoons %}<th>Wooden Spoon</th>{% endif %}
     {% if visible.wooden_spoon_years %}<th>Wooden Spoon Years</th>{% endif %}
+	
+	{% if visible.minor_prems %}<th>Minor Prem</th>{% endif %}
+	{% if visible.minor_prem_years %}<th>Minor Prem Years</th>{% endif %}
 
     {% if visible.all_aus %}<th>AA</th>{% endif %}
     {% if visible.all_aus_years %}<th>AA Years</th>{% endif %}
@@ -644,6 +663,18 @@ Min Votes:
             {% endfor %}
         </td>
     {% endif %}
+	
+	{% if visible.minor_prems %}
+		<td>{{ minor_prem_counts.get(p['player_id'], 0) }}</td>
+	{% endif %}
+
+	{% if visible.minor_prem_years %}
+		<td class="aa-years">
+			{% for yr, club in minor_prem_years.get(p['player_id'], []) %}
+				{{ yr }} ({{ club }}){% if not loop.last %}, {% endif %}
+			{% endfor %}
+		</td>
+	{% endif %}
 
     {% if visible.all_aus %}<td>{{ p['all_aus_count'] or 0 }}</td>{% endif %}
 

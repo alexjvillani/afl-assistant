@@ -417,6 +417,40 @@ def get_22u22_counts():
     conn.close()
     return counts
     
+def get_minor_prem_years_map():
+    """
+    player_id -> list of (year, team)
+    """
+    conn = get_db()
+    c = conn.cursor()
+
+    c.execute("""
+        SELECT DISTINCT
+            player_id,
+            year,
+            team
+        FROM minor_premiers
+        ORDER BY year DESC
+    """)
+
+    mp = {}
+
+    for pid, year, team in c.fetchall():
+        mp.setdefault(pid, []).append((year, team))
+
+    conn.close()
+
+    return mp
+
+
+def get_minor_prem_counts():
+    """
+    player_id -> count
+    """
+    years = get_minor_prem_years_map()
+
+    return {pid: len(v) for pid, v in years.items()}
+    
 # -------------------------------------------------
 # QUERY
 # -------------------------------------------------
@@ -529,6 +563,10 @@ def query_players(filters):
     if filters.get("max_best_brownlow_votes"):
         query += " AND best_brownlow_votes <= ?"
         params.append(filters["max_best_brownlow_votes"])
+        
+    if filters.get("min_minor_prems"):
+        query += " AND minor_prem_count >= ?"
+        params.append(filters["min_minor_prems"])
         
     if filters.get("min_wooden_spoons"):
         query += " AND wooden_spoon_count >= ?"
@@ -656,6 +694,9 @@ def index():
     # ✅ Wooden Spoon YEARS (list of years + club)
     wooden_spoon_years = get_wooden_spoon_years_map()
     wooden_spoon_counts = get_wooden_spoon_counts()
+    
+    minor_prem_years = get_minor_prem_years_map()
+    minor_prem_counts = get_minor_prem_counts()
 
     # ✅ Unified draft pick (AA + B&F combined)
     unified_draft = get_unified_draft_picks()
@@ -686,6 +727,9 @@ def index():
         # Wooden Spoon
         wooden_spoon_years=wooden_spoon_years,
         wooden_spoon_counts=wooden_spoon_counts,
+        
+        minor_prem_years=minor_prem_years,
+        minor_prem_counts=minor_prem_counts,
 
         # Draft
         unified_draft=unified_draft,
