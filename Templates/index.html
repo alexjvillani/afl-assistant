@@ -290,6 +290,24 @@ Min Total Finals Goals:
        value="{{ filters.min_total_finals_goals or '' }}">
 <br><br>
 
+<strong>Finals Appearances</strong><br>
+
+Min Finals Played:
+<input type="number"
+       name="min_finals_played"
+       value="{{ filters.min_finals_played or '' }}">
+
+<br><br>
+
+<strong>Grand Final Appearances</strong><br>
+
+Min GF Appearances:
+<input type="number"
+       name="min_gf_apps"
+       value="{{ filters.min_gf_apps or '' }}">
+	   
+<br><br>	   
+
 <strong>All-Australian</strong><br>
 
 Min Selections:
@@ -402,6 +420,16 @@ Min Votes:
         {% if filters.sort_by == "brownlow_wins" %}selected{% endif %}>
         Brownlow Wins
     </option>
+	
+	<option value="finals_played"
+		{% if filters.sort_by == "finals_played" %}selected{% endif %}>
+		Finals Played
+	</option>
+
+	<option value="gf_appearances"
+		{% if filters.sort_by == "gf_appearances" %}selected{% endif %}>
+	GF Appearances
+	</option>
 
     <option value="gf_wins"
         {% if filters.sort_by == "gf_wins" %}selected{% endif %}>

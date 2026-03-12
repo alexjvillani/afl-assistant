@@ -580,6 +580,10 @@ def query_players(filters):
         query += " AND finals_played >= ?"
         params.append(filters["min_finals_played"])
         
+    if filters.get("min_gf_apps"):
+        query += " AND gf_appearances >= ?"
+        params.append(int(filters["min_gf_apps"]))
+        
     if filters.get("min_max_finals_goals"):
         query += " AND max_finals_goals >= ?"
         params.append(filters["min_max_finals_goals"])
