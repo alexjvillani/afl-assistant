@@ -9,6 +9,7 @@ body {
     font-family: Arial;
     background:#f4f4f4;
     padding:20px;
+    color:#222;
 }
 
 table {
@@ -48,6 +49,10 @@ input[type="number"] {
     width:80px;
 }
 
+/* -----------------------------
+PLAYER INFO
+----------------------------- */
+
 .club-stats {
     font-size:12px;
     text-align:left;
@@ -74,7 +79,57 @@ input[type="number"] {
     color:#006400;
 }
 
-/* DARK MODE */
+/* -----------------------------
+GRIDLEY
+----------------------------- */
+
+.gridley{
+    border-collapse: collapse;
+    margin-top:15px;
+}
+
+.gridley th,
+.gridley td{
+    border:1px solid #ddd;
+    padding:8px;
+    text-align:center;
+}
+
+.gridley th{
+    background:#222;
+    color:white;
+}
+
+.grid-clue{
+    background:#f4f4f4;
+    font-size:12px;
+    width:160px;
+    color:#222;
+    line-height:1.4;
+}
+
+.grid-cell{
+    width:120px;
+    height:80px;
+}
+
+.grid-button{
+    width:100%;
+    height:60px;
+    border:none;
+    background:white;
+    color:#222;
+    cursor:pointer;
+    border-radius:6px;
+}
+
+.grid-button:hover{
+    background:#e9e9e9;
+}
+
+/* -----------------------------
+DARK MODE
+----------------------------- */
 
 body.dark {
     background:#121212;
@@ -116,7 +171,36 @@ body.dark .aa-years {
     color:#aaa;
 }
 
-/* Toggle Button */
+/* -----------------------------
+GRIDLEY DARK MODE
+----------------------------- */
+
+body.dark .gridley th{
+    background:#000;
+    color:#fff;
+}
+
+body.dark .gridley td{
+    border:1px solid #333;
+}
+
+body.dark .grid-clue{
+    background:#2a2a2a;
+    color:#e0e0e0;
+}
+
+body.dark .grid-button{
+    background:#2a2a2a;
+    color:#e0e0e0;
+}
+
+body.dark .grid-button:hover{
+    background:#3a3a3a;
+}
+
+/* -----------------------------
+DARK MODE BUTTON
+----------------------------- */
 
 #darkBtn{
     padding:8px 14px;
@@ -132,40 +216,6 @@ body.dark .aa-years {
     background:#444;
 }
 
-.gridley{
-    border-collapse: collapse;
-    margin-top:15px;
-}
-
-.gridley th,
-.gridley td{
-    border:1px solid #ccc;
-    padding:8px;
-    text-align:center;
-}
-
-.grid-clue{
-    background:#f0f0f0;
-    font-size:12px;
-    width:160px;
-}
-
-.grid-cell{
-    width:120px;
-    height:80px;
-}
-
-.grid-button{
-    width:100%;
-    height:60px;
-    border:none;
-    background:#e8f4ff;
-    cursor:pointer;
-}
-
-.grid-button:hover{
-    background:#cfe7ff;
-}
 
 </style>
 </head>

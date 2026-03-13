@@ -453,6 +453,33 @@ def get_minor_prem_counts():
 
     return {pid: len(v) for pid, v in years.items()}
     
+def get_player_id_by_name(name):
+
+    conn = get_db()
+    c = conn.cursor()
+
+    parts = name.split()
+
+    if len(parts) >= 2:
+        db_name = parts[-1] + ", " + " ".join(parts[:-1])
+    else:
+        db_name = name
+
+    c.execute("""
+    SELECT player_id
+    FROM players
+    WHERE name = ?
+    """, (db_name,))
+
+    row = c.fetchone()
+
+    conn.close()
+
+    if row:
+        return row[0]
+
+    return None
+    
 # -------------------------------------------------
 # QUERY
 # -------------------------------------------------
@@ -770,8 +797,19 @@ def index():
 
         f = parse_gridley_clue(clue)
 
+        # Team mapping
         if "team" in f:
-            filters["team1"] = f["team"]
+            filters["team1"] = f.pop("team")
+
+        # Teammate mapping
+        if "teammate" in f:
+
+            pid = get_player_id_by_name(f["teammate"])
+
+            if pid:
+                filters["teammate_of"] = pid
+
+            f.pop("teammate")
 
         filters.update(f)
         
