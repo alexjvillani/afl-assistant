@@ -132,6 +132,41 @@ body.dark .aa-years {
     background:#444;
 }
 
+.gridley{
+    border-collapse: collapse;
+    margin-top:15px;
+}
+
+.gridley th,
+.gridley td{
+    border:1px solid #ccc;
+    padding:8px;
+    text-align:center;
+}
+
+.grid-clue{
+    background:#f0f0f0;
+    font-size:12px;
+    width:160px;
+}
+
+.grid-cell{
+    width:120px;
+    height:80px;
+}
+
+.grid-button{
+    width:100%;
+    height:60px;
+    border:none;
+    background:#e8f4ff;
+    cursor:pointer;
+}
+
+.grid-button:hover{
+    background:#cfe7ff;
+}
+
 </style>
 </head>
 
@@ -144,6 +179,54 @@ body.dark .aa-years {
 </button>
 
 <div class="box">
+
+<h2>Today's Gridley</h2>
+
+<table class="gridley">
+
+<tr>
+    <th></th>
+
+    {% for r in grid_rows %}
+        <th class="grid-clue">{{ r }}</th>
+    {% endfor %}
+
+</tr>
+
+{% for col in grid_cols %}
+
+<tr>
+
+    <th class="grid-clue">
+        {{ col }}
+    </th>
+
+    {% for row in grid_rows %}
+
+    <td class="grid-cell">
+
+        <form method="get">
+
+            <input type="hidden" name="row_clue" value="{{ row }}">
+            <input type="hidden" name="col_clue" value="{{ col }}">
+
+            <button class="grid-button">
+                Search
+            </button>
+
+        </form>
+
+    </td>
+
+    {% endfor %}
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
 <form method="get">
 
 <strong>Teams</strong><br>

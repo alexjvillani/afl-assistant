@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from flask import Flask, render_template, request
+from fetch_gridley import get_today_grid
+from gridley_util import parse_gridley_clue, short_clue
 import sqlite3
 import re
 
@@ -627,6 +629,87 @@ def query_players(filters):
     if filters.get("min_last_year"):
         query += " AND last_year >= ?"
         params.append(filters["min_last_year"])
+        
+    if filters.get("rising_star_winner"):
+        query += """
+        AND player_id IN (
+            SELECT player_id
+            FROM rising_star_nominations
+            WHERE is_winner = 1
+        )
+        """
+    if filters.get("rising_star_nominee"):
+        query += """
+        AND player_id IN (
+            SELECT player_id
+            FROM rising_star_nominations
+        )
+        """
+    if filters.get("min_bnf_wins"):
+        query += """
+        AND player_id IN (
+            SELECT player_id
+            FROM best_and_fairest
+            GROUP BY player_id
+            HAVING SUM(bnf_wins) >= ?
+        )
+        """
+        params.append(filters["min_bnf_wins"])
+        
+    if filters.get("under22_selection"):
+        query += """
+        AND player_id IN (
+            SELECT player_id
+            FROM player_22u22
+        )
+        """
+    if filters.get("min_premierships"):
+        query += " AND gf_wins >= ?"
+        params.append(filters["min_premierships"])
+        
+    if filters.get("min_clubs"):
+        query += """
+        AND (
+            LENGTH(teams) - LENGTH(REPLACE(teams, ',', '')) + 1
+        ) >= ?
+        """
+        params.append(filters["min_clubs"])
+        
+    if filters.get("min_finals_wins"):
+        query += " AND finals_wins >= ?"
+        params.append(filters["min_finals_wins"])
+        
+    if filters.get("decade_start") and filters.get("decade_end"):
+        query += " AND first_year <= ? AND last_year >= ?"
+        params.append(int(filters["decade_end"]))
+        params.append(int(filters["decade_start"]))
+        
+    if filters.get("min_two_clubs_games"):
+        query += """
+        AND player_id IN (
+            SELECT player_id
+            FROM player_club_stats
+            WHERE games >= ?
+            GROUP BY player_id
+            HAVING COUNT(*) >= 2
+        )
+        """
+        params.append(int(filters["min_two_clubs_games"]))
+    
+    if filters.get("max_draft_pick"):
+        query += """
+        AND player_id IN (
+            SELECT DISTINCT player_id
+            FROM best_and_fairest
+            WHERE draft_pick_num IS NOT NULL
+                AND draft_pick_num <= ?
+        )
+        """
+        params.append(int(filters["max_draft_pick"]))
+    
+    if filters.get("min_max_GF_disposals"):
+        query += " AND max_GF_disposals >= ?"
+        params.append(int(filters["min_max_GF_disposals"]))
 
     sort_column = filters.get("sort_by") or "career_games"
     sort_order = filters.get("sort_order") or "DESC"
@@ -664,18 +747,74 @@ def query_players(filters):
 
 @app.route("/", methods=["GET"])
 def index():
+    
+    try:
+        grid_rows, grid_cols = get_today_grid()
+    except:
+        grid_rows = []
+        grid_cols = []
+        
+        
     raw = dict(request.args)
 
     filters = {}
     visible = {}
+    
+    row_clue = request.args.get("row_clue")
+    col_clue = request.args.get("col_clue")
+
+    for clue in [row_clue, col_clue]:
+
+        if not clue:
+            continue
+
+        f = parse_gridley_clue(clue)
+
+        if "team" in f:
+            filters["team1"] = f["team"]
+
+        filters.update(f)
+        
+    visible["teams"] = True
+    visible["years"] = True
+
+    if "min_games" in filters:
+        visible["career_games"] = True
+
+    if "max_goals" in filters:
+        visible["career_goals"] = True
+
+    if "min_two_clubs_games" in filters:
+        visible["club_stats"] = True
+
+    if "min_max_disposals_game" in filters:
+        visible["max_disposals_game"] = True
+
+    if "min_max_tackles_game" in filters:
+        visible["max_tackles_game"] = True
+
+    if "min_max_marks_game" in filters:
+        visible["max_marks_game"] = True
+
+    if "min_minor_prems" in filters:
+        visible["minor_prems"] = True
+
+    if "max_draft_pick" in filters:
+        visible["draft_pick"] = True
 
     # ---------------------------------
     # Parse filters + visible columns
     # ---------------------------------
     for k, v in raw.items():
+
         val = scalar(v)
+
         if k.startswith("show_"):
             visible[k.replace("show_", "")] = True
+
+        elif k in ["row_clue", "col_clue"]:
+            continue
+
         else:
             filters[k] = val
 
@@ -718,6 +857,10 @@ def index():
         visible=visible,
 
         player_options=player_options,
+        
+        grid_rows=grid_rows,
+        grid_cols=grid_cols,
+        
 
         # Awards
         aa_years=aa_years,
