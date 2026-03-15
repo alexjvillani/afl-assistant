@@ -18,6 +18,21 @@ TEAM_OPTIONS = [
     "westcoast", "bullldogs"
 ]
 
+TEAM_ALIASES = {
+
+    "brisbane": ["brisbaneb", "brisbanel"],
+
+    "bulldogs": ["footscray", "bullldogs"],
+    "footscray": ["footscray", "bullldogs"],
+
+    "kangaroos": ["kangaroos", "northmelbourne"],
+    "northmelbourne": ["kangaroos", "northmelbourne"],
+
+    "sydney": ["southmelbourne", "swans"],
+    "swans": ["southmelbourne", "swans"],
+
+}
+
 # -------------------------------------------------
 # SCHEMA SAFETY
 # -------------------------------------------------
@@ -105,6 +120,46 @@ def get_player_teams(player_id):
     teams = [r[0] for r in c.fetchall()]
     conn.close()
     return ", ".join(teams)
+    
+def get_player_name_by_id(pid):
+
+    conn = get_db()
+    c = conn.cursor()
+
+    c.execute("""
+        SELECT name
+        FROM players
+        WHERE player_id = ?
+    """, (pid,))
+
+    row = c.fetchone()
+    conn.close()
+
+    if row:
+        return row[0]
+
+    return None
+    
+def get_player_id_by_name(name):
+
+    conn = get_db()
+    c = conn.cursor()
+
+    name = name.strip()
+
+    c.execute("""
+        SELECT player_id
+        FROM players
+        WHERE TRIM(name) = TRIM(?)
+    """, (name,))
+
+    row = c.fetchone()
+    conn.close()
+
+    if row:
+        return row[0]
+
+    return None
 
 # -------------------------------------------------
 # ALL AUSTRALIAN
@@ -453,32 +508,6 @@ def get_minor_prem_counts():
 
     return {pid: len(v) for pid, v in years.items()}
     
-def get_player_id_by_name(name):
-
-    conn = get_db()
-    c = conn.cursor()
-
-    parts = name.split()
-
-    if len(parts) >= 2:
-        db_name = parts[-1] + ", " + " ".join(parts[:-1])
-    else:
-        db_name = name
-
-    c.execute("""
-    SELECT player_id
-    FROM players
-    WHERE name = ?
-    """, (db_name,))
-
-    row = c.fetchone()
-
-    conn.close()
-
-    if row:
-        return row[0]
-
-    return None
     
 # -------------------------------------------------
 # QUERY
@@ -493,25 +522,52 @@ def query_players(filters):
     params = []
 
     if filters.get("team1"):
-        query += " AND (',' || REPLACE(teams, ' ', '') || ',') LIKE ?"
-        params.append("%," + filters["team1"] + ",%")
 
-    if filters.get("team2"):
-        query += " AND (',' || REPLACE(teams, ' ', '') || ',') LIKE ?"
-        params.append("%," + filters["team2"] + ",%")
+        team = filters["team1"]
+        teams = TEAM_ALIASES.get(team, [team])
 
-    if filters.get("teammate_of"):
         query += """
         AND player_id IN (
+            SELECT DISTINCT player_id
+            FROM player_seasons
+            WHERE team IN (%s)
+        )
+        """ % ",".join(["?"]*len(teams))
+
+        params.extend(teams)
+
+
+    if filters.get("team2"):
+
+        team = filters["team2"]
+        teams = TEAM_ALIASES.get(team, [team])
+
+        query += """
+        AND player_id IN (
+            SELECT DISTINCT player_id
+            FROM player_seasons
+            WHERE team IN (%s)
+        )
+        """ % ",".join(["?"]*len(teams))
+
+        params.extend(teams)
+
+    if filters.get("teammate_of"):
+
+        query += """
+        AND player_id IN (
+
             SELECT DISTINCT ps2.player_id
             FROM player_seasons ps1
             JOIN player_seasons ps2
               ON ps1.year = ps2.year
-             AND ps1.team = ps2.team
+              AND ps1.team = ps2.team
             WHERE ps1.player_id = ?
-              AND ps2.player_id != ps1.player_id
-        )
+            AND ps2.player_id != ps1.player_id
+
+        )   
         """
+
         params.append(filters["teammate_of"])
 
     if filters.get("min_games"):
@@ -799,17 +855,23 @@ def index():
 
         # Team mapping
         if "team" in f:
-            filters["team1"] = f.pop("team")
+
+            if "team1" not in filters:
+                filters["team1"] = f.pop("team")
+            else:
+                filters["team2"] = f.pop("team")
 
         # Teammate mapping
         if "teammate" in f:
 
-            pid = get_player_id_by_name(f["teammate"])
+            name = f.pop("teammate")
+            pid = get_player_id_by_name(name)
 
             if pid:
                 filters["teammate_of"] = pid
+                filters["teammate_display"] = get_player_name_by_id(pid)
 
-            f.pop("teammate")
+            f.pop("teammate", None)
 
         filters.update(f)
         
@@ -854,7 +916,9 @@ def index():
             continue
 
         else:
-            filters[k] = val
+
+            if k not in filters:
+                filters[k] = val
 
     # ---------------------------------
     # Main query

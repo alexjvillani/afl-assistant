@@ -12,23 +12,29 @@ DB_PATH = "players.db"
 # -------------------------------------------------
 
 TEAM_ALIASES = {
-    "adelaide": ["adelaide", "adelaide crows"],
-    "brisbane": ["brisbane", "brisbane lions", "brisbane bears", "fitzroy"],
-    "carlton": ["carlton", "carlton blues"],
-    "collingwood": ["collingwood", "collingwood magpies"],
-    "essendon": ["essendon", "essendon bombers"],
-    "fremantle": ["fremantle", "fremantle dockers"],
-    "geelong": ["geelong", "geelong cats"],
-    "goldcoast": ["gold coast", "gold coast suns"],
-    "gws": ["gws", "gws giants", "greater western sydney"],
-    "hawthorn": ["hawthorn", "hawthorn hawks"],
-    "melbourne": ["melbourne", "melbourne demons"],
-    "kangaroos": ["north melbourne", "kangaroos"],
-    "richmond": ["richmond", "richmond tigers"],
-    "stkilda": ["st kilda", "stkilda", "st kilda saints"],
-    "swans": ["sydney", "sydney swans", "south melbourne"],
-    "westcoast": ["west coast", "west coast eagles"],
-    "bullldogs": ["western bulldogs", "footscray"]
+
+    "adelaide": ["adelaide", "crows"],
+    "brisbaneb": ["brisbane bears", "bears"],
+    "brisbanel": ["brisbane lions", "lions"],
+    "carlton": ["carlton", "blues"],
+    "collingwood": ["collingwood", "magpies"],
+    "essendon": ["essendon", "bombers"],
+    "fitzroy": ["fitzroy"],
+    "fremantle": ["fremantle", "dockers"],
+    "geelong": ["geelong", "cats"],
+    "goldcoast": ["gold coast", "suns"],
+    "gws": ["gws", "giants", "greater western sydney"],
+    "hawthorn": ["hawthorn", "hawks"],
+    "melbourne": ["melbourne", "demons"],
+    "kangaroos": ["north melbourne", "kangaroos", "north"],
+    "padelaide": ["port adelaide", "power"],
+    "richmond": ["richmond", "tigers"],
+    "stkilda": ["st kilda", "saints"],
+    "swans": ["sydney", "swans", "sydney swans", "south melbourne"],
+    "westcoast": ["west coast", "eagles"],
+    "bullldogs": ["western bulldogs", "bulldogs", "footscray"],
+    "university": ["university"]
+
 }
 
 
@@ -46,7 +52,7 @@ def short_clue(text):
     if "teammate of" in t:
         return "Teammate"
 
-    if "games for two different" in t:
+    if "two different" in t:
         return "2 Clubs"
 
     if "disposals" in t:
@@ -71,30 +77,12 @@ def short_clue(text):
 
 
 # -------------------------------------------------
-# TEAM DETECTION
-# -------------------------------------------------
-
-def detect_team(clue):
-
-    c = clue.lower()
-
-    for team, aliases in TEAM_ALIASES.items():
-
-        for alias in aliases:
-
-            if alias in c:
-                return team
-
-    return None
-
-
-# -------------------------------------------------
 # NUMBER EXTRACTION
 # -------------------------------------------------
 
 def extract_number(clue):
 
-    nums = re.findall(r'\d+', clue)
+    nums = re.findall(r"\d+", clue)
 
     if nums:
         return int(nums[0])
@@ -103,36 +91,23 @@ def extract_number(clue):
 
 
 # -------------------------------------------------
-# STAT TYPE DETECTION
+# TEAM DETECTION
 # -------------------------------------------------
 
-def detect_stat_type(clue):
+def detect_team(clue):
 
     c = clue.lower()
 
-    if "disposal" in c:
-        return "disposals_game"
+    # fix south melbourne issue first
+    if "south melbourne" in c:
+        return "swans"
 
-    if "tackle" in c:
-        return "tackles_game"
+    for team, aliases in TEAM_ALIASES.items():
 
-    if "mark" in c:
-        return "marks_game"
+        for alias in aliases:
 
-    if "two different" in c and "game" in c:
-        return "two_club_games"
-
-    if "game" in c:
-        return "career_games"
-
-    if "goal" in c:
-        return "career_goals"
-
-    if "mcg" in c:
-        return "mcg_games"
-
-    if "grand final" in c:
-        return "gf_disposals"
+            if alias in c:
+                return team
 
     return None
 
@@ -148,11 +123,19 @@ def detect_teammate(clue):
     if "teammate of" not in c:
         return None
 
-    name = c.split("teammate of")[1]
-
+    name = c.split("teammate of")[-1]
     name = name.replace(".", "").strip()
 
-    return name.title()
+    parts = name.split()
+
+    if len(parts) >= 2:
+
+        first = parts[0].capitalize()
+        last = parts[1].capitalize()
+
+        return "%s, %s" % (last, first)
+
+    return None
 
 
 # -------------------------------------------------
@@ -181,58 +164,122 @@ def detect_decade(clue):
 
 def parse_gridley_clue(clue):
 
+    clue_lower = clue.lower()
+
     filters = {}
 
+    # ---------------------------------------------
+    # TEAM
+    # ---------------------------------------------
+
     team = detect_team(clue)
+
     if team:
         filters["team"] = team
 
+    # ---------------------------------------------
+    # TEAMMATE
+    # ---------------------------------------------
+
     teammate = detect_teammate(clue)
+
     if teammate:
         filters["teammate"] = teammate
 
-    decade = detect_decade(clue)
-    if decade:
-        filters["decade_start"] = decade[0]
-        filters["decade_end"] = decade[1]
+    # ---------------------------------------------
+    # TWO CLUB GAMES
+    # ---------------------------------------------
 
-    num = extract_number(clue)
-    stat = detect_stat_type(clue)
+    if "games for two different" in clue_lower:
 
-    if num and stat:
+        num = extract_number(clue)
 
-        if stat == "disposals_game":
-            filters["min_max_disposals_game"] = num
-
-        elif stat == "tackles_game":
-            filters["min_max_tackles_game"] = num
-
-        elif stat == "marks_game":
-            filters["min_max_marks_game"] = num
-
-        elif stat == "career_games":
-            filters["min_games"] = num
-
-        elif stat == "two_club_games":
+        if num:
             filters["min_two_clubs_games"] = num
 
-        elif stat == "career_goals":
+    # ---------------------------------------------
+    # DISPOSALS
+    # ---------------------------------------------
+
+    if "disposals" in clue_lower:
+
+        num = extract_number(clue)
+
+        if num:
+            filters["min_max_disposals_game"] = num
+
+    # ---------------------------------------------
+    # TACKLES
+    # ---------------------------------------------
+
+    if "tackles" in clue_lower:
+
+        num = extract_number(clue)
+
+        if num:
+            filters["min_max_tackles_game"] = num
+
+    # ---------------------------------------------
+    # MARKS
+    # ---------------------------------------------
+
+    if "marks" in clue_lower:
+
+        num = extract_number(clue)
+
+        if num:
+            filters["min_max_marks_game"] = num
+
+    # ---------------------------------------------
+    # CAREER GAMES
+    # ---------------------------------------------
+
+    if "games at vfl/afl level" in clue_lower or "200 or more games" in clue_lower:
+
+        num = extract_number(clue)
+
+        if num:
+            filters["min_games"] = num
+
+    # ---------------------------------------------
+    # GOALS
+    # ---------------------------------------------
+
+    if "goals over their career" in clue_lower:
+
+        num = extract_number(clue)
+
+        if num:
             filters["max_goals"] = num
 
-        elif stat == "mcg_games":
-            filters["min_mcg_games"] = num
+    # ---------------------------------------------
+    # MINOR PREMIERS
+    # ---------------------------------------------
 
-        elif stat == "gf_disposals":
-            filters["min_max_GF_disposals"] = num
-
-    if "finished in first place" in clue.lower():
+    if "finished in first place" in clue_lower:
         filters["min_minor_prems"] = 1
+        
+    # ---------------------------------------------
+    # PLAYED AT LEAST X GAME
+    # ---------------------------------------------
 
-    if "top" in clue.lower() and "draft" in clue.lower():
-        filters["max_draft_pick"] = num
+    if "played at least" in clue_lower and "game" in clue_lower:
 
-    if "led team in goals" in clue.lower():
-        filters["min_gk_wins"] = 1
+        num = extract_number(clue)
+
+        if num:
+            filters["min_games"] = num
+
+    # ---------------------------------------------
+    # DECADE
+    # ---------------------------------------------
+
+    decade = detect_decade(clue)
+
+    if decade:
+
+        filters["min_first_year"] = decade[0]
+        filters["max_last_year"] = decade[1]
 
     return filters
 
