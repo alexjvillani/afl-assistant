@@ -2,87 +2,85 @@
 
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import datetime
-import time
 
 
 def get_today_grid():
 
-    # ---------------------------------
-    # Build today's Gridley URL
-    # ---------------------------------
-
     today = datetime.date.today().strftime("%Y-%m-%d")
     url = "https://gridleygame.com/" + today
 
-    print "Opening:", url
-
-    # ---------------------------------
-    # Firefox options
-    # ---------------------------------
+    print("Opening:", url)
 
     options = Options()
-
-    # location of Firefox
     options.binary_location = r"C:\Program Files\Mozilla Firefox\firefox.exe"
-
-    # run browser silently
     options.add_argument("-headless")
 
-    # ---------------------------------
-    # Start browser
-    # ---------------------------------
-
     driver = webdriver.Firefox(
-        executable_path="geckodriver.exe",
-        firefox_options=options
+        executable_path=r"E:\afl-assistant\geckodriver.exe",
+        options=options
     )
 
     driver.get(url)
 
-    # allow React page to render
-    time.sleep(4)
+    WebDriverWait(driver, 15).until(
+        EC.presence_of_element_located((By.CSS_SELECTOR, "[aria-label]"))
+    )
 
-    # ---------------------------------
-    # Find grid buttons
-    # ---------------------------------
+    elements = driver.find_elements(By.CSS_SELECTOR, "[aria-label]")
 
-    buttons = driver.find_elements_by_css_selector("button[aria-label]")
+    rows = []
+    cols = []
 
-    labels = []
+    for e in elements:
 
-    for b in buttons:
+        label = e.get_attribute("aria-label")
 
-        label = b.get_attribute("aria-label")
+        if not label:
+            continue
 
-        # grid clues are long sentences
-        if label and len(label) > 40:
-            labels.append(label)
+        if len(label) < 25:
+            continue
+
+        loc = e.location
+        x = loc["x"]
+        y = loc["y"]
+
+        # Top clues
+        if y < 300:
+            cols.append((x, label))
+
+        # Left clues
+        elif x < 300:
+            rows.append((y, label))
 
     driver.quit()
 
-    # ---------------------------------
-    # Gridley is always 3x3
-    # ---------------------------------
+    rows.sort()
+    cols.sort()
 
-    rows = labels[:3]
-    cols = labels[3:6]
+    rows = [r[1] for r in rows][:3]
+    cols = [c[1] for c in cols][:3]
 
-    return rows, cols
+    print("ROWS:", rows)
+    print("COLS:", cols)
 
+    # IMPORTANT:
+    # Template expects first value across top, second down left
+    return cols, rows
 
-# ---------------------------------
-# Allow running script directly
-# ---------------------------------
 
 if __name__ == "__main__":
 
-    rows, cols = get_today_grid()
+    grid_rows, grid_cols = get_today_grid()
 
-    print "\nROWS:"
-    for r in rows:
-        print "-", r
+    print("\nTOP CLUES:")
+    for r in grid_rows:
+        print("-", r)
 
-    print "\nCOLS:"
-    for c in cols:
-        print "-", c
+    print("\nLEFT CLUES:")
+    for c in grid_cols:
+        print("-", c)

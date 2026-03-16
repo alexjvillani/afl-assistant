@@ -514,7 +514,7 @@ def get_minor_prem_counts():
 # QUERY
 # -------------------------------------------------
 
-def query_players(filters):
+def query_players(filters, visible):
 
     conn = get_db()
     c = conn.cursor()
@@ -768,6 +768,12 @@ def query_players(filters):
         params.append(int(filters["decade_end"]))
         params.append(int(filters["decade_start"]))
         
+    if "max_height" in filters:
+        visible["height"] = True
+
+    if "min_finals" in filters:
+        visible["finals_games"] = True
+        
     if filters.get("min_bnf"):
 
         query += """
@@ -847,7 +853,14 @@ def index():
 
     try:
         grid_rows, grid_cols = get_today_grid()
-    except:
+
+        print("GRID ROWS:", grid_rows)
+        print("GRID COLS:", grid_cols)
+
+    except Exception as e:
+
+        print("GRIDLEY FETCH FAILED:", e)
+
         grid_rows = []
         grid_cols = []
 
@@ -946,7 +959,7 @@ def index():
     # Main query
     # ---------------------------------
 
-    players = query_players(filters)
+    players = query_players(filters, visible)
     total_results = len(players)
 
     # ---------------------------------

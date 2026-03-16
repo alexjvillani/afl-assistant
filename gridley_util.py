@@ -51,9 +51,18 @@ def short_clue(text):
 
     if "teammate of" in t:
         return "Teammate"
+        
+    if "goals in a finals game" in t:
+        return "Finals Goals"
 
     if "two different" in t:
         return "2 Clubs"
+        
+    if "finals game" in t:
+        return "Finals"
+
+    if "cm or shorter" in t:
+        return "Height"
 
     if "disposals" in t:
         return "Disposals"
@@ -198,6 +207,17 @@ def parse_gridley_clue(clue):
             filters["min_two_clubs_games"] = num
 
     # ---------------------------------------------
+    # FINALS GOALS
+    # ---------------------------------------------
+
+    if "goals" in clue_lower and "final" in clue_lower:
+
+        num = extract_number(clue)
+
+        if num:
+            filters["min_max_finals_goals"] = num
+
+    # ---------------------------------------------
     # DISPOSALS
     # ---------------------------------------------
 
@@ -207,12 +227,12 @@ def parse_gridley_clue(clue):
 
         if num:
             filters["min_max_disposals_game"] = num
-            
-            
-    if "best and fairest" in clue.lower():
-        filters["min_bnf"] = 1
 
-    if "bnf" in clue.lower():
+    # ---------------------------------------------
+    # BEST & FAIREST
+    # ---------------------------------------------
+
+    if "best and fairest" in clue_lower or "bnf" in clue_lower:
         filters["min_bnf"] = 1
 
     # ---------------------------------------------
@@ -249,7 +269,7 @@ def parse_gridley_clue(clue):
             filters["min_games"] = num
 
     # ---------------------------------------------
-    # GOALS
+    # CAREER GOALS
     # ---------------------------------------------
 
     if "goals over their career" in clue_lower:
@@ -265,7 +285,7 @@ def parse_gridley_clue(clue):
 
     if "finished in first place" in clue_lower:
         filters["min_minor_prems"] = 1
-        
+
     # ---------------------------------------------
     # PLAYED AT LEAST X GAME
     # ---------------------------------------------
@@ -276,6 +296,22 @@ def parse_gridley_clue(clue):
 
         if num:
             filters["min_games"] = num
+
+    # ---------------------------------------------
+    # PLAYED IN FINALS
+    # ---------------------------------------------
+
+    if "finals game" in clue_lower or "played in a final" in clue_lower:
+        filters["min_finals_played"] = 1
+
+    # ---------------------------------------------
+    # HEIGHT
+    # ---------------------------------------------
+
+    m = re.search(r"(\d+)cm or shorter", clue_lower)
+
+    if m:
+        filters["max_height"] = int(m.group(1))
 
     # ---------------------------------------------
     # DECADE
