@@ -267,6 +267,18 @@ def parse_gridley_clue(clue):
 
         if num:
             filters["min_games"] = num
+            
+            
+    # ---------------------------------------------
+    # MAX CAREER GAMES
+    # ---------------------------------------------
+
+    if "games or less" in clue_lower:
+
+        num = extract_number(clue)
+
+        if num:
+            filters["max_games"] = num
 
     # ---------------------------------------------
     # CAREER GOALS
