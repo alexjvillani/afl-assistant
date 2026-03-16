@@ -845,8 +845,6 @@ def query_players(filters):
 @app.route("/", methods=["GET"])
 def index():
 
-    import random
-
     try:
         grid_rows, grid_cols = get_today_grid()
     except:
@@ -864,6 +862,7 @@ def index():
     # ---------------------------------
     # Parse Gridley clues
     # ---------------------------------
+
     for clue in [row_clue, col_clue]:
 
         if not clue:
@@ -892,8 +891,9 @@ def index():
         filters.update(f)
 
     # ---------------------------------
-    # Visible columns
+    # Visible columns logic
     # ---------------------------------
+
     visible["teams"] = True
     visible["years"] = True
 
@@ -927,6 +927,7 @@ def index():
     # ---------------------------------
     # Parse manual filters
     # ---------------------------------
+
     for k, v in raw.items():
 
         val = scalar(v)
@@ -938,101 +939,27 @@ def index():
             continue
 
         else:
-
             if k not in filters:
                 filters[k] = val
 
     # ---------------------------------
     # Main query
     # ---------------------------------
+
     players = query_players(filters)
     total_results = len(players)
 
     # ---------------------------------
-    # Load draft data
+    # Lookup data
     # ---------------------------------
-    unified_draft = get_unified_draft_picks()
 
-    # ---------------------------------
-    # Suggested niche player
-    # ---------------------------------
-    suggested_player = None
-
-    if players:
-
-        scored = []
-
-        for p in players:
-
-            score = 0
-
-            games = p["games"] if "games" in p else 200
-
-            draft_data = unified_draft.get(p["player_id"])
-            draft = draft_data["pick"] if draft_data and "pick" in draft_data else 100
-
-            # ---------------------------------
-            # Niche weighting
-            # ---------------------------------
-
-            score += (200 - min(games, 200)) * 0.5
-            score += draft * 0.2
-
-            # ---------------------------------
-            # Stat closeness weighting
-            # ---------------------------------
-
-            if "min_max_disposals_game" in filters and "max_disposals_game" in p:
-
-                target = filters["min_max_disposals_game"]
-                actual = p["max_disposals_game"]
-
-                diff = actual - target
-
-                if diff >= 0:
-                    score += max(0, 50 - diff * 5)
-
-            if "min_max_tackles_game" in filters and "max_tackles_game" in p:
-
-                target = filters["min_max_tackles_game"]
-                actual = p["max_tackles_game"]
-
-                diff = actual - target
-
-                if diff >= 0:
-                    score += max(0, 50 - diff * 5)
-
-            if "min_max_marks_game" in filters and "max_marks_game" in p:
-
-                target = filters["min_max_marks_game"]
-                actual = p["max_marks_game"]
-
-                diff = actual - target
-
-                if diff >= 0:
-                    score += max(0, 50 - diff * 5)
-
-            # ---------------------------------
-            # Randomness so Suggest Again works
-            # ---------------------------------
-
-            score += random.random() * 10
-
-            scored.append((score, p))
-
-        scored.sort(reverse=True)
-
-        niche_pool = [p for s, p in scored[:15]]
-
-        suggested_player = random.choice(niche_pool)
-
-    # ---------------------------------
-    # Lookup / helper maps
-    # ---------------------------------
     player_options = get_player_options()
+
     aa_years = get_aa_years_map()
     rs_counts = get_rs_counts()
+
     bnf_years = get_bnf_years_map()
+
     u22_years = get_22u22_years_map()
     u22_counts = get_22u22_counts()
 
@@ -1042,17 +969,88 @@ def index():
     minor_prem_years = get_minor_prem_years_map()
     minor_prem_counts = get_minor_prem_counts()
 
+    unified_draft = get_unified_draft_picks()
+
+    # ---------------------------------
+    # Suggested niche player logic
+    # ---------------------------------
+
+    import random
+
+    suggested_player = None
+
+    if players:
+
+        scored = []
+
+        for p in players:
+
+            # sqlite Row safety
+            games = p["games"] if "games" in p.keys() else 200
+
+            draft = unified_draft.get(p["player_id"], 100)
+
+            if isinstance(draft, dict):
+                draft = draft.get("pick", 100)
+
+            score = 0
+
+            # Prefer low games (niche)
+            score += min(games, 200) * 0.6
+
+            # Prefer late draft picks
+            score += draft * 0.3
+
+            # Randomisation
+            score += random.random() * 20
+
+            # ---------------------------------
+            # Disposal target optimisation
+            # ---------------------------------
+
+            if "min_max_disposals_game" in filters:
+
+                target = filters["min_max_disposals_game"]
+
+                if "max_disposals_game" in p.keys():
+
+                    diff = abs(p["max_disposals_game"] - target)
+
+                    score += diff * 2
+
+            # ---------------------------------
+            # B&F logic (prefer exactly 1)
+            # ---------------------------------
+
+            if "min_bnf" in filters:
+
+                pid = p["player_id"]
+
+                count = len(bnf_years.get(pid, []))
+
+                score += abs(count - 1) * 20
+
+            scored.append((score, p))
+
+        scored.sort()
+
+        niche_pool = [p for s, p in scored[:15]]
+
+        suggested_player = random.choice(niche_pool)
+
     # ---------------------------------
     # Render
     # ---------------------------------
+
     return render_template(
+
         "index.html",
 
         players=players,
         total_results=total_results,
-        suggested_player=suggested_player,
 
         teams=TEAM_OPTIONS,
+
         filters=filters,
         visible=visible,
 
@@ -1061,20 +1059,22 @@ def index():
         grid_rows=grid_rows,
         grid_cols=grid_cols,
 
+        suggested_player=suggested_player,
+
         # Awards
         aa_years=aa_years,
         rs_counts=rs_counts,
         bnf_years=bnf_years,
 
-        # 22 Under 22
+        # 22u22
         u22_years=u22_years,
         u22_counts=u22_counts,
 
-        # Wooden Spoon
+        # Wooden spoon
         wooden_spoon_years=wooden_spoon_years,
         wooden_spoon_counts=wooden_spoon_counts,
 
-        # Minor Premiers
+        # Minor premiers
         minor_prem_years=minor_prem_years,
         minor_prem_counts=minor_prem_counts,
 
@@ -1083,7 +1083,7 @@ def index():
 
         # Helpers
         get_player_club_stats=get_player_club_stats,
-        get_player_teams=get_player_teams,
+        get_player_teams=get_player_teams
     )
 # -------------------------------------------------
 # NICHE ROUTE — SEASON TOP 10s
