@@ -226,7 +226,7 @@ def parse_gridley_clue(clue):
         num = extract_number(clue)
 
         if num:
-            filters["min_max_disposals_game"] = num
+            filters["min_max_disposals_game"] = int(num)
 
     # ---------------------------------------------
     # BEST & FAIREST

@@ -1021,13 +1021,13 @@ def index():
             # Disposal target optimisation
             # ---------------------------------
 
-            if "min_max_disposals_game" in filters:
+            if "min_max_disposals_game" in filters and filters["min_max_disposals_game"]:
 
-                target = filters["min_max_disposals_game"]
+                target = int(filters["min_max_disposals_game"])
 
-                if "max_disposals_game" in p.keys():
+                if "max_disposals_game" in p.keys() and p["max_disposals_game"]:
 
-                    diff = abs(p["max_disposals_game"] - target)
+                    diff = abs(int(p["max_disposals_game"]) - target)
 
                     score += diff * 2
 
