@@ -127,6 +127,16 @@ GRIDLEY
     background:#e9e9e9;
 }
 
+.grid-suggestion{
+    text-align:center;
+    font-size:12px;
+}
+
+.grid-clear{
+    margin-left:4px;
+    font-size:11px;
+}
+
 /* -----------------------------
 DARK MODE
 ----------------------------- */
@@ -255,16 +265,53 @@ DARK MODE BUTTON
 
     <td class="grid-cell">
 
-        <form method="get">
+        {% if suggested_player 
+           and row == request.args.get("row_clue") 
+           and col == request.args.get("col_clue") %}
 
-            <input type="hidden" name="row_clue" value="{{ row }}">
-            <input type="hidden" name="col_clue" value="{{ col }}">
+            <div class="grid-suggestion">
 
-            <button class="grid-button">
-                Search
-            </button>
+                <b>{{ suggested_player.name }}</b>
 
-        </form>
+                <div style="margin-top:6px;">
+
+                    <form method="get" style="display:inline;">
+
+                        <input type="hidden" name="row_clue" value="{{ row }}">
+                        <input type="hidden" name="col_clue" value="{{ col }}">
+
+                        <button class="grid-button">
+                            Suggest Again
+                        </button>
+
+                    </form>
+
+                    <form method="get" style="display:inline;">
+
+                        <button class="grid-clear">
+                            Clear
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        {% else %}
+
+            <form method="get">
+
+                <input type="hidden" name="row_clue" value="{{ row }}">
+                <input type="hidden" name="col_clue" value="{{ col }}">
+
+                <button class="grid-button">
+                    Search
+                </button>
+
+            </form>
+
+        {% endif %}
 
     </td>
 
@@ -277,6 +324,7 @@ DARK MODE BUTTON
 </table>
 
 </div>
+
 <form method="get">
 
 <strong>Teams</strong><br>

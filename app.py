@@ -5,6 +5,7 @@ from fetch_gridley import get_today_grid
 from gridley_util import parse_gridley_clue, short_clue
 import sqlite3
 import re
+import random
 
 app = Flask(__name__)
 
@@ -767,6 +768,19 @@ def query_players(filters):
         params.append(int(filters["decade_end"]))
         params.append(int(filters["decade_start"]))
         
+    if filters.get("min_bnf"):
+
+        query += """
+        AND player_id IN (
+            SELECT player_id
+            FROM best_and_fairest
+            GROUP BY player_id
+            HAVING COUNT(*) >= ?
+        )
+        """
+
+        params.append(filters["min_bnf"])
+        
     if filters.get("min_two_clubs_games"):
         query += """
         AND player_id IN (
@@ -830,22 +844,26 @@ def query_players(filters):
 
 @app.route("/", methods=["GET"])
 def index():
-    
+
+    import random
+
     try:
         grid_rows, grid_cols = get_today_grid()
     except:
         grid_rows = []
         grid_cols = []
-        
-        
+
     raw = dict(request.args)
 
     filters = {}
     visible = {}
-    
+
     row_clue = request.args.get("row_clue")
     col_clue = request.args.get("col_clue")
 
+    # ---------------------------------
+    # Parse Gridley clues
+    # ---------------------------------
     for clue in [row_clue, col_clue]:
 
         if not clue:
@@ -871,10 +889,11 @@ def index():
                 filters["teammate_of"] = pid
                 filters["teammate_display"] = get_player_name_by_id(pid)
 
-            f.pop("teammate", None)
-
         filters.update(f)
-        
+
+    # ---------------------------------
+    # Visible columns
+    # ---------------------------------
     visible["teams"] = True
     visible["years"] = True
 
@@ -902,8 +921,11 @@ def index():
     if "max_draft_pick" in filters:
         visible["draft_pick"] = True
 
+    if "min_bnf" in filters:
+        visible["bnf_years"] = True
+
     # ---------------------------------
-    # Parse filters + visible columns
+    # Parse manual filters
     # ---------------------------------
     for k, v in raw.items():
 
@@ -927,6 +949,84 @@ def index():
     total_results = len(players)
 
     # ---------------------------------
+    # Load draft data
+    # ---------------------------------
+    unified_draft = get_unified_draft_picks()
+
+    # ---------------------------------
+    # Suggested niche player
+    # ---------------------------------
+    suggested_player = None
+
+    if players:
+
+        scored = []
+
+        for p in players:
+
+            score = 0
+
+            games = p["games"] if "games" in p else 200
+
+            draft_data = unified_draft.get(p["player_id"])
+            draft = draft_data["pick"] if draft_data and "pick" in draft_data else 100
+
+            # ---------------------------------
+            # Niche weighting
+            # ---------------------------------
+
+            score += (200 - min(games, 200)) * 0.5
+            score += draft * 0.2
+
+            # ---------------------------------
+            # Stat closeness weighting
+            # ---------------------------------
+
+            if "min_max_disposals_game" in filters and "max_disposals_game" in p:
+
+                target = filters["min_max_disposals_game"]
+                actual = p["max_disposals_game"]
+
+                diff = actual - target
+
+                if diff >= 0:
+                    score += max(0, 50 - diff * 5)
+
+            if "min_max_tackles_game" in filters and "max_tackles_game" in p:
+
+                target = filters["min_max_tackles_game"]
+                actual = p["max_tackles_game"]
+
+                diff = actual - target
+
+                if diff >= 0:
+                    score += max(0, 50 - diff * 5)
+
+            if "min_max_marks_game" in filters and "max_marks_game" in p:
+
+                target = filters["min_max_marks_game"]
+                actual = p["max_marks_game"]
+
+                diff = actual - target
+
+                if diff >= 0:
+                    score += max(0, 50 - diff * 5)
+
+            # ---------------------------------
+            # Randomness so Suggest Again works
+            # ---------------------------------
+
+            score += random.random() * 10
+
+            scored.append((score, p))
+
+        scored.sort(reverse=True)
+
+        niche_pool = [p for s, p in scored[:15]]
+
+        suggested_player = random.choice(niche_pool)
+
+    # ---------------------------------
     # Lookup / helper maps
     # ---------------------------------
     player_options = get_player_options()
@@ -936,47 +1036,45 @@ def index():
     u22_years = get_22u22_years_map()
     u22_counts = get_22u22_counts()
 
-    # ✅ Wooden Spoon YEARS (list of years + club)
     wooden_spoon_years = get_wooden_spoon_years_map()
     wooden_spoon_counts = get_wooden_spoon_counts()
-    
+
     minor_prem_years = get_minor_prem_years_map()
     minor_prem_counts = get_minor_prem_counts()
-
-    # ✅ Unified draft pick (AA + B&F combined)
-    unified_draft = get_unified_draft_picks()
 
     # ---------------------------------
     # Render
     # ---------------------------------
     return render_template(
         "index.html",
+
         players=players,
         total_results=total_results,
+        suggested_player=suggested_player,
 
         teams=TEAM_OPTIONS,
         filters=filters,
         visible=visible,
 
         player_options=player_options,
-        
+
         grid_rows=grid_rows,
         grid_cols=grid_cols,
-        
 
         # Awards
         aa_years=aa_years,
         rs_counts=rs_counts,
         bnf_years=bnf_years,
-        
-            # 22 Under 22
+
+        # 22 Under 22
         u22_years=u22_years,
         u22_counts=u22_counts,
 
         # Wooden Spoon
         wooden_spoon_years=wooden_spoon_years,
         wooden_spoon_counts=wooden_spoon_counts,
-        
+
+        # Minor Premiers
         minor_prem_years=minor_prem_years,
         minor_prem_counts=minor_prem_counts,
 
@@ -985,7 +1083,7 @@ def index():
 
         # Helpers
         get_player_club_stats=get_player_club_stats,
-        get_player_teams=get_player_teams,   # ✅ already correct
+        get_player_teams=get_player_teams,
     )
 # -------------------------------------------------
 # NICHE ROUTE — SEASON TOP 10s

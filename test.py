@@ -1,81 +1,62 @@
-# -*- coding: utf-8 -*-
-
 import sqlite3
 
 DB = "players.db"
 
-SAM_PID = "https://afltables.com/afl/stats/players/S/Sam_Docherty.html"
+PLAYER_NAME = "Docherty, Sam"
 
 conn = sqlite3.connect(DB)
+conn.row_factory = sqlite3.Row
 c = conn.cursor()
 
-def print_rows(title, rows):
-    print("\n" + title)
-    print("-" * len(title))
-    for r in rows:
-        print(r)
-    if not rows:
-        print("(none)")
+print("\nTESTING TEAMMATE LOGIC\n")
 
 # ---------------------------------
-# Find Ben Hudson
+# Find player_id
 # ---------------------------------
-c.execute("""
-SELECT player_id, name
+
+row = c.execute("""
+SELECT player_id
 FROM players
-WHERE name LIKE '%Hudson%'
-ORDER BY name
-""")
-hudsons = c.fetchall()
-print_rows("HUDSON MATCHES", hudsons)
+WHERE name = ?
+""", (PLAYER_NAME,)).fetchone()
 
-ben_pid = None
-for pid, name in hudsons:
-    if name == "Hudson, Ben":
-        ben_pid = pid
+if not row:
+    print("Player not found:", PLAYER_NAME)
+    exit()
 
-print("\nBEN PID:", ben_pid)
-print("SAM PID:", SAM_PID)
+pid = row["player_id"]
 
-# ---------------------------------
-# Sam Docherty seasons
-# ---------------------------------
-c.execute("""
-SELECT year, team
-FROM player_seasons
-WHERE player_id = ?
-ORDER BY year
-""", (SAM_PID,))
-sam_rows = c.fetchall()
-print_rows("SAM DOCHERTY SEASONS", sam_rows)
+print("Testing teammates for:", PLAYER_NAME)
+print("Player ID:", pid)
+
 
 # ---------------------------------
-# Ben Hudson seasons
+# Teammate query (same logic as site)
 # ---------------------------------
-c.execute("""
-SELECT year, team
-FROM player_seasons
-WHERE player_id = ?
-ORDER BY year
-""", (ben_pid,))
-ben_rows = c.fetchall()
-print_rows("BEN HUDSON SEASONS", ben_rows)
 
-# ---------------------------------
-# Same team + same year overlap
-# ---------------------------------
-c.execute("""
-SELECT ps1.year, ps1.team
+rows = c.execute("""
+SELECT DISTINCT p.name
 FROM player_seasons ps1
 JOIN player_seasons ps2
-  ON ps1.year = ps2.year
- AND ps1.team = ps2.team
+  ON ps1.team = ps2.team
+ AND ps1.year = ps2.year
+JOIN players p
+  ON ps2.player_id = p.player_id
 WHERE ps1.player_id = ?
-AND ps2.player_id = ?
-ORDER BY ps1.year
-""", (SAM_PID, ben_pid))
+AND ps2.player_id != ?
+ORDER BY p.name
+""", (pid, pid)).fetchall()
 
-overlap = c.fetchall()
-print_rows("DIRECT TEAMMATE OVERLAP", overlap)
+
+print("\nTotal teammates found:", len(rows))
+
+
+print("\nFirst 50 teammates:\n")
+
+for r in rows[:50]:
+    print(r["name"])
+
 
 conn.close()
+
+print("\nDONE\n")

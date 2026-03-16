@@ -207,6 +207,13 @@ def parse_gridley_clue(clue):
 
         if num:
             filters["min_max_disposals_game"] = num
+            
+            
+    if "best and fairest" in clue.lower():
+        filters["min_bnf"] = 1
+
+    if "bnf" in clue.lower():
+        filters["min_bnf"] = 1
 
     # ---------------------------------------------
     # TACKLES
