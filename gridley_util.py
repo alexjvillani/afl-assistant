@@ -227,6 +227,29 @@ def parse_gridley_clue(clue):
 
         if num:
             filters["min_max_disposals_game"] = int(num)
+            
+    # ---------------------------------------------
+    # GOALS IN A SINGLE GAME
+    # ---------------------------------------------
+
+    if "goals in a single game" in clue_lower:
+
+        num = extract_number(clue)
+
+        if num:
+            filters["min_max_goals_game"] = num
+            
+    # ---------------------------------------------
+    # RISING STAR
+    # ---------------------------------------------
+
+    if "rising star" in clue_lower:
+
+        if "nomination" in clue_lower or "nominated" in clue_lower:
+            filters["rising_star_nominee"] = 1
+
+        elif "winner" in clue_lower:
+            filters["rising_star_winner"] = 1
 
     # ---------------------------------------------
     # BEST & FAIREST
