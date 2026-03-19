@@ -891,7 +891,7 @@ def index():
             else:
                 filters["team2"] = f.pop("team")
 
-        # Teammate mapping
+        # Teammate mapping (Gridley already converts)
         if "teammate" in f:
 
             name = f.pop("teammate")
@@ -902,6 +902,50 @@ def index():
                 filters["teammate_display"] = get_player_name_by_id(pid)
 
         filters.update(f)
+
+    # ---------------------------------
+    # Parse manual filters
+    # ---------------------------------
+
+    for k, v in raw.items():
+
+        val = scalar(v)
+
+        if k.startswith("show_"):
+            visible[k.replace("show_", "")] = True
+
+        elif k in ["row_clue", "col_clue"]:
+            continue
+
+        else:
+            if k not in filters:
+                filters[k] = val
+
+    # ---------------------------------
+    # 🔥 FIX: Safe teammate handling
+    # ---------------------------------
+
+    if filters.get("teammate_of"):
+
+        val = filters["teammate_of"]
+
+        # Case 1: already a player_id (Gridley handled it)
+        if isinstance(val, basestring) and val.startswith("http"):
+
+            # ensure display name is set
+            if not filters.get("teammate_display"):
+                filters["teammate_display"] = get_player_name_by_id(val)
+
+        # Case 2: manual input (name) → convert to ID
+        else:
+
+            pid = get_player_id_by_name(val)
+
+            if pid:
+                filters["teammate_of"] = pid
+                filters["teammate_display"] = get_player_name_by_id(pid)
+            else:
+                filters.pop("teammate_of", None)
 
     # ---------------------------------
     # Visible columns logic
@@ -938,24 +982,6 @@ def index():
         visible["bnf_years"] = True
 
     # ---------------------------------
-    # Parse manual filters
-    # ---------------------------------
-
-    for k, v in raw.items():
-
-        val = scalar(v)
-
-        if k.startswith("show_"):
-            visible[k.replace("show_", "")] = True
-
-        elif k in ["row_clue", "col_clue"]:
-            continue
-
-        else:
-            if k not in filters:
-                filters[k] = val
-
-    # ---------------------------------
     # Main query
     # ---------------------------------
 
@@ -970,7 +996,6 @@ def index():
 
     aa_years = get_aa_years_map()
     rs_counts = get_rs_counts()
-
     bnf_years = get_bnf_years_map()
 
     u22_years = get_22u22_years_map()
@@ -988,8 +1013,6 @@ def index():
     # Suggested niche player logic
     # ---------------------------------
 
-    import random
-
     suggested_player = None
 
     if players:
@@ -998,7 +1021,6 @@ def index():
 
         for p in players:
 
-            # sqlite Row safety
             games = p["games"] if "games" in p.keys() else 200
 
             draft = unified_draft.get(p["player_id"], 100)
@@ -1008,18 +1030,9 @@ def index():
 
             score = 0
 
-            # Prefer low games (niche)
             score += min(games, 200) * 0.6
-
-            # Prefer late draft picks
             score += draft * 0.3
-
-            # Randomisation
             score += random.random() * 20
-
-            # ---------------------------------
-            # Disposal target optimisation
-            # ---------------------------------
 
             if "min_max_disposals_game" in filters and filters["min_max_disposals_game"]:
 
@@ -1028,27 +1041,18 @@ def index():
                 if "max_disposals_game" in p.keys() and p["max_disposals_game"]:
 
                     diff = abs(int(p["max_disposals_game"]) - target)
-
                     score += diff * 2
-
-            # ---------------------------------
-            # B&F logic (prefer exactly 1)
-            # ---------------------------------
 
             if "min_bnf" in filters:
 
                 pid = p["player_id"]
-
                 count = len(bnf_years.get(pid, []))
-
                 score += abs(count - 1) * 20
 
             scored.append((score, p))
 
         scored.sort()
-
         niche_pool = [p for s, p in scored[:15]]
-
         suggested_player = random.choice(niche_pool)
 
     # ---------------------------------
@@ -1074,27 +1078,21 @@ def index():
 
         suggested_player=suggested_player,
 
-        # Awards
         aa_years=aa_years,
         rs_counts=rs_counts,
         bnf_years=bnf_years,
 
-        # 22u22
         u22_years=u22_years,
         u22_counts=u22_counts,
 
-        # Wooden spoon
         wooden_spoon_years=wooden_spoon_years,
         wooden_spoon_counts=wooden_spoon_counts,
 
-        # Minor premiers
         minor_prem_years=minor_prem_years,
         minor_prem_counts=minor_prem_counts,
 
-        # Draft
         unified_draft=unified_draft,
 
-        # Helpers
         get_player_club_stats=get_player_club_stats,
         get_player_teams=get_player_teams
     )
