@@ -768,6 +768,12 @@ def query_players(filters, visible):
         params.append(int(filters["decade_end"]))
         params.append(int(filters["decade_start"]))
         
+    if "max_height" in filters:
+        visible["height"] = True
+
+    if "min_finals" in filters:
+        visible["finals_games"] = True
+        
     if filters.get("min_bnf"):
 
         query += """
@@ -847,8 +853,14 @@ def index():
 
     try:
         grid_rows, grid_cols = get_today_grid()
+
+        print("GRID ROWS:", grid_rows)
+        print("GRID COLS:", grid_cols)
+
     except Exception as e:
+
         print("GRIDLEY FETCH FAILED:", e)
+
         grid_rows = []
         grid_cols = []
 
@@ -861,7 +873,7 @@ def index():
     col_clue = request.args.get("col_clue")
 
     # ---------------------------------
-    # Parse Gridley clues (STRICT MODE)
+    # Parse Gridley clues
     # ---------------------------------
 
     for clue in [row_clue, col_clue]:
@@ -871,26 +883,17 @@ def index():
 
         f = parse_gridley_clue(clue)
 
-        # ✅ ONLY allow safe keys from Gridley
-        allowed_keys = {
-            "team",
-            "teammate",
-            "min_games",
-            "min_goals",
-            "min_all_aus"
-        }
-
-        f = {k: v for k, v in f.items() if k in allowed_keys}
-
         # Team mapping
         if "team" in f:
+
             if "team1" not in filters:
                 filters["team1"] = f.pop("team")
             else:
                 filters["team2"] = f.pop("team")
 
-        # Teammate mapping
+        # Teammate mapping (Gridley already converts)
         if "teammate" in f:
+
             name = f.pop("teammate")
             pid = get_player_id_by_name(name)
 
@@ -919,18 +922,21 @@ def index():
                 filters[k] = val
 
     # ---------------------------------
-    # Safe teammate handling
+    # 🔥 FIX: Safe teammate handling
     # ---------------------------------
 
     if filters.get("teammate_of"):
 
         val = filters["teammate_of"]
 
+        # Case 1: already a player_id (Gridley handled it)
         if isinstance(val, basestring) and val.startswith("http"):
 
+            # ensure display name is set
             if not filters.get("teammate_display"):
                 filters["teammate_display"] = get_player_name_by_id(val)
 
+        # Case 2: manual input (name) → convert to ID
         else:
 
             pid = get_player_id_by_name(val)
@@ -942,23 +948,38 @@ def index():
                 filters.pop("teammate_of", None)
 
     # ---------------------------------
-    # Visible columns (NO AUTO-SPAM)
+    # Visible columns logic
     # ---------------------------------
 
     visible["teams"] = True
-    # ✅ ONLY show columns if USER asked (checkbox)
-    # OR minimal useful defaults:
+    visible["years"] = True
 
-    if filters.get("min_games"):
+    if "min_games" in filters:
         visible["career_games"] = True
 
-    if filters.get("max_goals"):
+    if "max_goals" in filters:
         visible["career_goals"] = True
 
-    # ❌ REMOVED ALL AUTO-TRIGGERS LIKE:
-    # min_max_disposals_game → visible["max_disposals_game"]
-    # min_bnf → visible["bnf_years"]
-    # etc.
+    if "min_two_clubs_games" in filters:
+        visible["club_stats"] = True
+
+    if "min_max_disposals_game" in filters:
+        visible["max_disposals_game"] = True
+
+    if "min_max_tackles_game" in filters:
+        visible["max_tackles_game"] = True
+
+    if "min_max_marks_game" in filters:
+        visible["max_marks_game"] = True
+
+    if "min_minor_prems" in filters:
+        visible["minor_prems"] = True
+
+    if "max_draft_pick" in filters:
+        visible["draft_pick"] = True
+
+    if "min_bnf" in filters:
+        visible["bnf_years"] = True
 
     # ---------------------------------
     # Main query
@@ -1008,18 +1029,22 @@ def index():
                 draft = draft.get("pick", 100)
 
             score = 0
+
             score += min(games, 200) * 0.6
             score += draft * 0.3
             score += random.random() * 20
 
             if "min_max_disposals_game" in filters and filters["min_max_disposals_game"]:
+
                 target = int(filters["min_max_disposals_game"])
 
-                if p.get("max_disposals_game"):
+                if "max_disposals_game" in p.keys() and p["max_disposals_game"]:
+
                     diff = abs(int(p["max_disposals_game"]) - target)
                     score += diff * 2
 
             if "min_bnf" in filters:
+
                 pid = p["player_id"]
                 count = len(bnf_years.get(pid, []))
                 score += abs(count - 1) * 20
