@@ -276,6 +276,11 @@ DARK MODE BUTTON
                 <div style="margin-top:6px;">
 
                     <form method="get" style="display:inline;">
+                        {% for key, value in request.args.items() %}
+                            {% if key not in ["row_clue", "col_clue"] %}
+                                <input type="hidden" name="{{ key }}" value="{{ value }}">
+                            {% endif %}
+                        {% endfor %}
 
                         <input type="hidden" name="row_clue" value="{{ row }}">
                         <input type="hidden" name="col_clue" value="{{ col }}">
@@ -301,6 +306,11 @@ DARK MODE BUTTON
         {% else %}
 
             <form method="get">
+                {% for key, value in request.args.items() %}
+                    {% if key not in ["row_clue", "col_clue"] %}
+                        <input type="hidden" name="{{ key }}" value="{{ value }}">
+                    {% endif %}
+                {% endfor %}
 
                 <input type="hidden" name="row_clue" value="{{ row }}">
                 <input type="hidden" name="col_clue" value="{{ col }}">
@@ -669,8 +679,8 @@ Min Votes:
 </select>
 
 <select name="sort_order">
-    <option value="DESC">Descending</option>
-    <option value="ASC">Ascending</option>
+    <option value="DESC" {% if filters.sort_order != "ASC" %}selected{% endif %}>Descending</option>
+    <option value="ASC" {% if filters.sort_order == "ASC" %}selected{% endif %}>Ascending</option>
 </select>
 
 <br><br>
