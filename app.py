@@ -928,24 +928,24 @@ def index():
     if filters.get("teammate_of"):
 
         val = filters["teammate_of"]
+        pid = None
 
         # Case 1: already a player_id (Gridley handled it)
-        if isinstance(val, basestring) and val.startswith("http"):
-
-            # ensure display name is set
-            if not filters.get("teammate_display"):
-                filters["teammate_display"] = get_player_name_by_id(val)
+        if isinstance(val, int):
+            pid = val
+        elif isinstance(val, str) and val.isdigit():
+            pid = int(val)
 
         # Case 2: manual input (name) → convert to ID
-        else:
-
+        if pid is None:
             pid = get_player_id_by_name(val)
 
-            if pid:
-                filters["teammate_of"] = pid
+        if pid:
+            filters["teammate_of"] = pid
+            if not filters.get("teammate_display"):
                 filters["teammate_display"] = get_player_name_by_id(pid)
-            else:
-                filters.pop("teammate_of", None)
+        else:
+            filters.pop("teammate_of", None)
 
     # ---------------------------------
     # Visible columns logic
