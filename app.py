@@ -868,6 +868,7 @@ def index():
 
     filters = {}
     visible = {}
+    columns_customized = request.args.get("columns_customized") == "1"
 
     row_clue = request.args.get("row_clue")
     col_clue = request.args.get("col_clue")
@@ -928,58 +929,60 @@ def index():
     if filters.get("teammate_of"):
 
         val = filters["teammate_of"]
+        pid = None
 
         # Case 1: already a player_id (Gridley handled it)
-        if isinstance(val, basestring) and val.startswith("http"):
-
-            # ensure display name is set
-            if not filters.get("teammate_display"):
-                filters["teammate_display"] = get_player_name_by_id(val)
+        if isinstance(val, int):
+            pid = val
+        elif isinstance(val, str) and val.isdigit():
+            pid = int(val)
 
         # Case 2: manual input (name) → convert to ID
-        else:
-
+        if pid is None:
             pid = get_player_id_by_name(val)
 
-            if pid:
-                filters["teammate_of"] = pid
+        if pid:
+            filters["teammate_of"] = pid
+            if not filters.get("teammate_display"):
                 filters["teammate_display"] = get_player_name_by_id(pid)
-            else:
-                filters.pop("teammate_of", None)
+        else:
+            filters.pop("teammate_of", None)
 
     # ---------------------------------
     # Visible columns logic
     # ---------------------------------
 
     visible["teams"] = True
-    visible["years"] = True
 
-    if "min_games" in filters:
-        visible["career_games"] = True
+    if not columns_customized:
+        visible["years"] = True
 
-    if "max_goals" in filters:
-        visible["career_goals"] = True
+        if "min_games" in filters:
+            visible["career_games"] = True
 
-    if "min_two_clubs_games" in filters:
-        visible["club_stats"] = True
+        if "max_goals" in filters:
+            visible["career_goals"] = True
 
-    if "min_max_disposals_game" in filters:
-        visible["max_disposals_game"] = True
+        if "min_two_clubs_games" in filters:
+            visible["club_stats"] = True
 
-    if "min_max_tackles_game" in filters:
-        visible["max_tackles_game"] = True
+        if "min_max_disposals_game" in filters:
+            visible["max_disposals_game"] = True
 
-    if "min_max_marks_game" in filters:
-        visible["max_marks_game"] = True
+        if "min_max_tackles_game" in filters:
+            visible["max_tackles_game"] = True
 
-    if "min_minor_prems" in filters:
-        visible["minor_prems"] = True
+        if "min_max_marks_game" in filters:
+            visible["max_marks_game"] = True
 
-    if "max_draft_pick" in filters:
-        visible["draft_pick"] = True
+        if "min_minor_prems" in filters:
+            visible["minor_prems"] = True
 
-    if "min_bnf" in filters:
-        visible["bnf_years"] = True
+        if "max_draft_pick" in filters:
+            visible["draft_pick"] = True
+
+        if "min_bnf" in filters:
+            visible["bnf_years"] = True
 
     # ---------------------------------
     # Main query
